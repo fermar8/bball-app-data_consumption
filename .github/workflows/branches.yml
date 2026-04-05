@@ -1,0 +1,77 @@
+name: Branch CI - Build, Test, and Plan
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    branches-ignore:
+      - main
+
+jobs:
+  build-test-deploy:
+    name: Build, Test, and Plan to Nonlive
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run unit tests
+        run: poe test
+
+      - name: Run integration tests
+        run: poe test-integration
+
+      - name: Verify Lambda handler
+        run: |
+          python -c "from src.messaging.handler import lambda_handler; print('Lambda handler loaded successfully')"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_PIPELINE_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'eu-west-3' }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ~1.0
+
+      - name: Create backend config
+        working-directory: ./terraform/resources
+        run: |
+          cat > backend.hcl << EOF
+          bucket         = "${{ vars.TF_STATE_BUCKET }}"
+          key            = "resources/nonlive/bball-app-data-consumption.tfstate"
+          region         = "${{ vars.AWS_REGION || 'eu-west-3' }}"
+          dynamodb_table = "${{ vars.TF_LOCK_TABLE }}"
+          encrypt        = true
+          EOF
+
+      - name: Terraform Init
+        working-directory: ./terraform/resources
+        run: terraform init -backend-config=backend.hcl
+
+      - name: Terraform Validate
+        working-directory: ./terraform/resources
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: ./terraform/resources
+        run: terraform plan -var-file="nonlive.tfvars" -no-color

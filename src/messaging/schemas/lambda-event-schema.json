@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Lambda Event Schema",
+  "description": "Schema for events accepted by the data-consumption-teams-static Lambda",
+  "type": "object",
+  "required": ["action"],
+  "properties": {
+    "action": {
+      "type": "string",
+      "enum": ["consume_teams_static"],
+      "description": "The action to perform"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "action": "consume_teams_static"
+    }
+  ]
+}
