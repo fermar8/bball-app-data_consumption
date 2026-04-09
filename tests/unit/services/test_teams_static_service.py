@@ -1,11 +1,11 @@
 """
-Unit tests for the service layer with mocked dependencies.
+Unit tests for the teams-static service layer with mocked dependencies.
 """
 import pytest
 from unittest.mock import MagicMock, patch
 
 from src.model.models import NbaTeam
-from src.service.service import TeamsConsumptionService, map_teams
+from src.service.teams_static_service import TeamsStaticService, map_teams
 
 
 RAW_TEAMS = [
@@ -53,8 +53,8 @@ class TestMapTeams:
         assert all(isinstance(t, NbaTeam) for t in teams)
 
 
-class TestTeamsConsumptionService:
-    """Unit tests for TeamsConsumptionService with mocked repository."""
+class TestTeamsStaticService:
+    """Unit tests for TeamsStaticService with mocked repository."""
 
     @pytest.fixture
     def mock_repository(self):
@@ -64,17 +64,17 @@ class TestTeamsConsumptionService:
 
     @pytest.fixture
     def service(self, mock_repository):
-        return TeamsConsumptionService(repository=mock_repository)
+        return TeamsStaticService(repository=mock_repository)
 
-    @patch('src.service.service._fetch_latest_teams_payload', return_value=RAW_TEAMS)
-    @patch('src.service.service._get_bucket_name', return_value='test-bucket')
+    @patch('src.service.teams_static_service._fetch_latest_teams_document', return_value={'payload': RAW_TEAMS})
+    @patch('src.service.teams_static_service._get_bucket_name', return_value='test-bucket')
     def test_consume_teams_returns_count(self, mock_bucket, mock_fetch, service):
         """consume_teams should return the number of teams persisted."""
         count = service.consume_teams()
         assert count == 2
 
-    @patch('src.service.service._fetch_latest_teams_payload', return_value=RAW_TEAMS)
-    @patch('src.service.service._get_bucket_name', return_value='test-bucket')
+    @patch('src.service.teams_static_service._fetch_latest_teams_document', return_value={'payload': RAW_TEAMS})
+    @patch('src.service.teams_static_service._get_bucket_name', return_value='test-bucket')
     def test_consume_teams_calls_upsert_batch(self, mock_bucket, mock_fetch, service, mock_repository):
         """consume_teams should call upsert_batch with mapped NbaTeam objects."""
         service.consume_teams()
@@ -83,18 +83,23 @@ class TestTeamsConsumptionService:
         assert len(persisted) == 2
         assert isinstance(persisted[0], NbaTeam)
 
-    @patch('src.service.service._get_bucket_name', side_effect=ValueError("S3_BUCKET_NAME not set"))
+    @patch('src.service.teams_static_service._get_bucket_name', side_effect=ValueError("S3_BUCKET_NAME not set"))
     def test_consume_teams_raises_on_missing_bucket(self, mock_bucket, service):
         """consume_teams should propagate ValueError when S3_BUCKET_NAME is missing."""
         with pytest.raises(ValueError, match="S3_BUCKET_NAME not set"):
             service.consume_teams()
 
     @patch(
-        'src.service.service._fetch_latest_teams_payload',
+        'src.service.teams_static_service._fetch_latest_teams_document',
         side_effect=FileNotFoundError("No files found"),
     )
-    @patch('src.service.service._get_bucket_name', return_value='test-bucket')
+    @patch('src.service.teams_static_service._get_bucket_name', return_value='test-bucket')
     def test_consume_teams_raises_on_missing_s3_data(self, mock_bucket, mock_fetch, service):
         """consume_teams should propagate FileNotFoundError when S3 has no data."""
         with pytest.raises(FileNotFoundError):
             service.consume_teams()
+
+    def test_consume_teams_from_document_raises_on_missing_payload(self, service):
+        """consume_teams_from_document should fail when payload is missing."""
+        with pytest.raises(ValueError, match='no payload'):
+            service.consume_teams_from_document({'source': 'nba_api'})

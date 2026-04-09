@@ -32,13 +32,3 @@ output "dynamodb_table_arn" {
   description = "ARN of the teams-static DynamoDB table"
   value       = aws_dynamodb_table.teams_static.arn
 }
-
-output "lambda_deadletter_queue_url" {
-  description = "SQS DLQ URL for failed Lambda invocations"
-  value       = var.environment == "live" ? aws_sqs_queue.lambda_deadletter[0].url : null
-}
-
-output "lambda_deadletter_queue_arn" {
-  description = "SQS DLQ ARN for failed Lambda invocations"
-  value       = var.environment == "live" ? aws_sqs_queue.lambda_deadletter[0].arn : null
-}

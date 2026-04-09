@@ -65,18 +65,6 @@ variable "tags" {
   }
 }
 
-variable "scheduler_enabled" {
-  description = "Enable/disable EventBridge Scheduler"
-  type        = bool
-  default     = false
-}
-
-variable "scheduler_expression" {
-  description = "Schedule expression (rate(...) or cron(...))"
-  type        = string
-  default     = "cron(0 9 * * ? *)"
-}
-
 variable "alarm_emails" {
   description = "List of email addresses to receive CloudWatch alarm notifications"
   type        = list(string)

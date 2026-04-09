@@ -8,7 +8,7 @@ from src.database.database import DynamoDBConnection
 from src.model.models import NbaTeam
 
 
-class TeamRepository:
+class TeamsStaticRepository:
     """Data access layer for NbaTeam using DynamoDB."""
 
     def __init__(self):
@@ -30,9 +30,6 @@ class TeamRepository:
             'fullName': team.fullName,
             'abbreviation': team.abbreviation,
             'nickname': team.nickname,
-            'city': team.city,
-            'state': team.state,
-            'yearFounded': Decimal(str(team.yearFounded)),
         }
         self.table.put_item(Item=item)
         return team
@@ -56,9 +53,6 @@ class TeamRepository:
                     'fullName': team.fullName,
                     'abbreviation': team.abbreviation,
                     'nickname': team.nickname,
-                    'city': team.city,
-                    'state': team.state,
-                    'yearFounded': Decimal(str(team.yearFounded)),
                 })
         return len(teams)
 
@@ -94,7 +88,4 @@ class TeamRepository:
             fullName=item.get('fullName', ''),
             abbreviation=item.get('abbreviation', ''),
             nickname=item.get('nickname', ''),
-            city=item.get('city', ''),
-            state=item.get('state', ''),
-            yearFounded=int(item.get('yearFounded', 0)),
         )

@@ -2,7 +2,6 @@
 Database models for the NBA teams data consumption application.
 """
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -14,9 +13,6 @@ class NbaTeam:
     fullName: str = ""
     abbreviation: str = ""
     nickname: str = ""
-    city: str = ""
-    state: str = ""
-    yearFounded: int = 0
 
     def to_dict(self) -> dict:
         """Convert model to dictionary."""
@@ -25,9 +21,6 @@ class NbaTeam:
             'fullName': self.fullName,
             'abbreviation': self.abbreviation,
             'nickname': self.nickname,
-            'city': self.city,
-            'state': self.state,
-            'yearFounded': self.yearFounded,
         }
 
     @classmethod
@@ -36,18 +29,14 @@ class NbaTeam:
         Map a raw teams_static dict from nba_api / S3 to an NbaTeam instance.
 
         Args:
-            raw: Raw dict with keys id, full_name, abbreviation, nickname,
-                 city, state, year_founded.
+            raw: Raw dict with keys id, full_name, abbreviation, nickname.
 
         Returns:
             NbaTeam instance.
         """
         return cls(
             teamId=int(raw['id']),
-            fullName=raw.get('full_name', ''),
-            abbreviation=raw.get('abbreviation', ''),
-            nickname=raw.get('nickname', ''),
-            city=raw.get('city', ''),
-            state=raw.get('state', ''),
-            yearFounded=int(raw.get('year_founded', 0)),
+            fullName=raw['full_name'],
+            abbreviation=raw['abbreviation'],
+            nickname=raw['nickname'],
         )

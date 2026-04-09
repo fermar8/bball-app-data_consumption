@@ -104,78 +104,16 @@ resource "aws_iam_role_policy_attachment" "lambda_dynamodb" {
   policy_arn = aws_iam_policy.lambda_dynamodb.arn
 }
 
-# DLQ policy attachments (live only)
-resource "aws_iam_policy" "lambda_dlq" {
-  count       = var.environment == "live" ? 1 : 0
-  name        = "${var.function_name}-${var.environment}-dlq-policy"
-  description = "Allow Lambda to send failed events to SQS DLQ"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect   = "Allow"
-        Action   = ["sqs:SendMessage"]
-        Resource = aws_sqs_queue.lambda_deadletter[0].arn
-      }
-    ]
-  })
-
-  tags = merge(var.tags, { Environment = var.environment })
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_dlq" {
-  count      = var.environment == "live" ? 1 : 0
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.lambda_dlq[0].arn
-}
-
-resource "aws_iam_policy" "lambda_read_dlq" {
-  count       = var.environment == "live" ? 1 : 0
-  name        = "${var.function_name}-${var.environment}-read-dlq-policy"
-  description = "Allow Lambda to read messages from SQS DLQ for replay"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "sqs:ReceiveMessage",
-          "sqs:DeleteMessage",
-          "sqs:GetQueueAttributes",
-        ]
-        Resource = aws_sqs_queue.lambda_deadletter[0].arn
-      }
-    ]
-  })
-
-  tags = merge(var.tags, { Environment = var.environment })
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_read_dlq" {
-  count      = var.environment == "live" ? 1 : 0
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.lambda_read_dlq[0].arn
-}
-
 # Lambda Function
 resource "aws_lambda_function" "function" {
   filename         = data.archive_file.lambda_zip.output_path
   function_name    = "${var.function_name}-${var.environment}"
   role             = aws_iam_role.lambda_role.arn
-  handler          = "src.messaging.handler.lambda_handler"
+  handler          = "src.messaging.teams_static_handler.lambda_handler"
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
   runtime          = "python3.12"
   timeout          = var.timeout
   memory_size      = var.memory_size
-
-  dynamic "dead_letter_config" {
-    for_each = var.environment == "live" ? [1] : []
-    content {
-      target_arn = aws_sqs_queue.lambda_deadletter[0].arn
-    }
-  }
 
   environment {
     variables = {
@@ -193,17 +131,4 @@ resource "aws_lambda_function" "function" {
     aws_iam_role_policy_attachment.lambda_dynamodb,
     aws_iam_role_policy_attachment.lambda_s3_read,
   ]
-}
-
-# Event Source Mapping: DLQ processor (live only)
-resource "aws_lambda_event_source_mapping" "dlq_processor" {
-  count            = var.environment == "live" ? 1 : 0
-  event_source_arn = aws_sqs_queue.lambda_deadletter[0].arn
-  function_name    = aws_lambda_function.function.arn
-  batch_size       = 1
-  enabled          = true
-
-  function_response_types = ["ReportBatchItemFailures"]
-
-  depends_on = [aws_iam_role_policy_attachment.lambda_read_dlq]
 }
