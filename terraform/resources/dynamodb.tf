@@ -1,8 +1,8 @@
 # DynamoDB table for teams-static data
-# Created per environment: teams-static-nonlive / teams-static-live
+# Created per environment: bball-app-data-consumption-teams-static-nonlive / bball-app-data-consumption-teams-static-live
 
 resource "aws_dynamodb_table" "teams_static" {
-  name         = "teams-static-${var.environment}"
+  name         = "bball-app-data-consumption-teams-static-${var.environment}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "teamId"
 
@@ -14,7 +14,7 @@ resource "aws_dynamodb_table" "teams_static" {
   tags = merge(
     var.tags,
     {
-      Name        = "teams-static-${var.environment}"
+      Name        = "bball-app-data-consumption-teams-static-${var.environment}"
       Environment = var.environment
     }
   )
