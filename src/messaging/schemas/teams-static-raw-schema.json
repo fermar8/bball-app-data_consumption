@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Teams Static Raw Payload Schema",
+  "description": "Schema for raw teams_static documents consumed from S3",
+  "type": "object",
+  "required": [
+    "source",
+    "endpoint",
+    "fetched_at_utc",
+    "aws_account_id",
+    "params",
+    "payload"
+  ],
+  "properties": {
+    "source": {
+      "type": "string",
+      "const": "nba_api"
+    },
+    "endpoint": {
+      "type": "string",
+      "const": "teams_static"
+    },
+    "fetched_at_utc": {
+      "type": "string",
+      "minLength": 1
+    },
+    "aws_account_id": {
+      "type": "string",
+      "pattern": "^[0-9]{12}$"
+    },
+    "params": {
+      "type": "object"
+    },
+    "payload": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "full_name",
+          "abbreviation",
+          "nickname",
+          "city",
+          "state",
+          "year_founded"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "full_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "abbreviation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "nickname": {
+            "type": "string",
+            "minLength": 1
+          },
+          "city": {
+            "type": "string",
+            "minLength": 1
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1
+          },
+          "year_founded": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
