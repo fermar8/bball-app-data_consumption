@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Games Raw Payload Schema",
+  "description": "Schema for raw schedule_league_v2 documents consumed from S3",
+  "type": "object",
+  "required": [
+    "source",
+    "endpoint",
+    "fetched_at_utc",
+    "aws_account_id",
+    "params",
+    "payload"
+  ],
+  "properties": {
+    "source": {
+      "type": "string",
+      "const": "nba_api"
+    },
+    "endpoint": {
+      "type": "string",
+      "const": "schedule_league_v2"
+    },
+    "fetched_at_utc": {
+      "type": "string",
+      "minLength": 1
+    },
+    "aws_account_id": {
+      "type": "string",
+      "pattern": "^[0-9]{12}$"
+    },
+    "params": {
+      "type": "object"
+    },
+    "payload": {
+      "type": "object",
+      "required": ["leagueSchedule"],
+      "properties": {
+        "leagueSchedule": {
+          "type": "object",
+          "required": ["gameDates"],
+          "properties": {
+            "gameDates": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["gameDate", "games"],
+                "properties": {
+                  "gameDate": {
+                    "type": "string"
+                  },
+                  "games": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "gameId",
+                        "gameStatus",
+                        "gameStatusText",
+                        "gameDateEst",
+                        "gameDateTimeEst",
+                        "gameLabel",
+                        "homeTeam",
+                        "awayTeam"
+                      ],
+                      "properties": {
+                        "gameId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "gameStatus": {
+                          "type": "integer"
+                        },
+                        "gameStatusText": {
+                          "type": "string"
+                        },
+                        "gameDateEst": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "gameDateTimeEst": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "gameLabel": {
+                          "type": "string"
+                        },
+                        "arenaName": {
+                          "type": "string"
+                        },
+                        "arenaCity": {
+                          "type": "string"
+                        },
+                        "homeTeam": {
+                          "type": "object",
+                          "required": ["teamId", "teamName", "teamTricode"],
+                          "properties": {
+                            "teamId": {
+                              "type": "integer"
+                            },
+                            "teamName": {
+                              "type": "string"
+                            },
+                            "teamTricode": {
+                              "type": "string"
+                            },
+                            "wins": {
+                              "type": ["integer", "null"]
+                            },
+                            "losses": {
+                              "type": ["integer", "null"]
+                            },
+                            "score": {
+                              "type": ["integer", "null"]
+                            }
+                          }
+                        },
+                        "awayTeam": {
+                          "type": "object",
+                          "required": ["teamId", "teamName", "teamTricode"],
+                          "properties": {
+                            "teamId": {
+                              "type": "integer"
+                            },
+                            "teamName": {
+                              "type": "string"
+                            },
+                            "teamTricode": {
+                              "type": "string"
+                            },
+                            "wins": {
+                              "type": ["integer", "null"]
+                            },
+                            "losses": {
+                              "type": ["integer", "null"]
+                            },
+                            "score": {
+                              "type": ["integer", "null"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -10,10 +10,16 @@ variable "bootstrap_state_bucket" {
   default     = "tfstate-590183661886-eu-west-3"
 }
 
-variable "function_name" {
+variable "teams_static_function_name" {
   description = "Name of the Lambda function (without environment suffix)"
   type        = string
   default     = "bball-app-data-consumption-teams-static"
+}
+
+variable "games_function_name" {
+  description = "Name of the games Lambda function (without environment suffix)"
+  type        = string
+  default     = "bball-app-data-consumption-games"
 }
 
 variable "environment" {
@@ -69,4 +75,21 @@ variable "alarm_emails" {
   description = "List of email addresses to receive CloudWatch alarm notifications"
   type        = list(string)
   default     = []
+}
+
+variable "games_scheduler_enabled" {
+  description = "Whether the games scheduler should be enabled"
+  type        = bool
+  default     = false
+}
+
+variable "games_refresh_days" {
+  description = "How many days to look back when selecting games to refresh"
+  type        = number
+  default     = 14
+
+  validation {
+    condition     = var.games_refresh_days >= 1
+    error_message = "games_refresh_days must be >= 1."
+  }
 }

@@ -12,7 +12,7 @@ resource "aws_sns_topic" "lambda_alarms" {
 # CloudWatch Alarm - Lambda Errors (live only)
 resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
   count               = var.environment == "live" ? 1 : 0
-  alarm_name          = "${var.function_name}-${var.environment}-errors"
+  alarm_name          = "${var.teams_static_function_name}-${var.environment}-errors"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
   metric_name         = "Errors"
@@ -25,6 +25,30 @@ resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
 
   dimensions = {
     FunctionName = aws_lambda_function.function.function_name
+  }
+
+  alarm_actions = [aws_sns_topic.lambda_alarms[0].arn]
+  ok_actions    = [aws_sns_topic.lambda_alarms[0].arn]
+
+  tags = merge(var.tags, { Environment = var.environment })
+}
+
+# CloudWatch Alarm - Games Lambda Errors (live only)
+resource "aws_cloudwatch_metric_alarm" "games_lambda_errors" {
+  count               = var.environment == "live" ? 1 : 0
+  alarm_name          = "${var.games_function_name}-${var.environment}-errors"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "Errors"
+  namespace           = "AWS/Lambda"
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 0
+  alarm_description   = "Triggers when the games Lambda has sustained errors"
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    FunctionName = aws_lambda_function.games_function.function_name
   }
 
   alarm_actions = [aws_sns_topic.lambda_alarms[0].arn]
