@@ -90,6 +90,6 @@ variable "games_refresh_days" {
 
   validation {
     condition     = var.games_refresh_days >= 1
-    error_message = "games_refresh_days must be >= 1."
+    error_message = "Games refresh days must be greater than or equal to 1."
   }
 }
