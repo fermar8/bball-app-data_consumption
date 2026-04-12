@@ -13,7 +13,7 @@ variable "bootstrap_state_bucket" {
 variable "function_name" {
   description = "Name of the Lambda function (without environment suffix)"
   type        = string
-  default     = "data-consumption-teams-static"
+  default     = "bball-app-data-consumption-teams-static"
 }
 
 variable "environment" {

@@ -27,11 +27,11 @@ def aws_credentials():
 def dynamodb_table(aws_credentials):
     """Create a mock DynamoDB teams-static table for testing."""
     with mock_aws():
-        os.environ['DYNAMODB_TABLE_NAME'] = 'teams-static-nonlive'
+        os.environ['DYNAMODB_TABLE_NAME'] = 'bball-app-data-consumption-teams-static-nonlive'
 
         dynamodb = boto3.resource('dynamodb', region_name='eu-west-3')
         table = dynamodb.create_table(
-            TableName='teams-static-nonlive',
+            TableName='bball-app-data-consumption-teams-static-nonlive',
             KeySchema=[
                 {'AttributeName': 'teamId', 'KeyType': 'HASH'},
             ],

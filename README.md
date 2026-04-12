@@ -34,10 +34,10 @@ terraform/resources/  # Infrastructure (per-environment)
 
 ### teams-static
 
-|                    | Nonlive                                 | Live                                 |
-| ------------------ | --------------------------------------- | ------------------------------------ |
-| **Lambda**         | `data-consumption-teams-static-nonlive` | `data-consumption-teams-static-live` |
-| **DynamoDB table** | `teams-static-nonlive`                  | `teams-static-live`                  |
+|                    | Nonlive                                           | Live                                           |
+| ------------------ | ------------------------------------------------- | ---------------------------------------------- |
+| **Lambda**         | `bball-app-data-consumption-teams-static-nonlive` | `bball-app-data-consumption-teams-static-live` |
+| **DynamoDB table** | `bball-app-data-consumption-teams-static-nonlive` | `bball-app-data-consumption-teams-static-live` |
 
 **Flow:**
 

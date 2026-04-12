@@ -20,8 +20,8 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          cache: 'pip'
+          python-version: "3.12"
+          cache: "pip"
 
       - name: Install dependencies
         run: |
@@ -227,11 +227,11 @@ jobs:
             ### Deployment
             - Environment: Live (Production)
             - Lambda Functions:
-              - data-consumption-teams-static-nonlive
-              - data-consumption-teams-static-live
+              - bball-app-data-consumption-teams-static-nonlive
+              - bball-app-data-consumption-teams-static-live
             - DynamoDB Tables:
-              - teams-static-nonlive
-              - teams-static-live
+              - bball-app-data-consumption-teams-static-nonlive
+              - bball-app-data-consumption-teams-static-live
 
             ### Artifacts
             - `bball-app-data-consumption-lambda.zip` - Lambda deployment package
