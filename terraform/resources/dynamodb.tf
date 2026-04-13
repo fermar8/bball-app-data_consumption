@@ -33,6 +33,47 @@ resource "aws_dynamodb_table" "games" {
     type = "S"
   }
 
+  attribute {
+    name = "homeTeamId"
+    type = "N"
+  }
+
+  attribute {
+    name = "awayTeamId"
+    type = "N"
+  }
+
+  attribute {
+    name = "leagueKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "gameDateTimeEst"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "byHomeTeamDateTime"
+    hash_key        = "homeTeamId"
+    range_key       = "gameDateTimeEst"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "byAwayTeamDateTime"
+    hash_key        = "awayTeamId"
+    range_key       = "gameDateTimeEst"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "byLeagueDateTime"
+    hash_key        = "leagueKey"
+    range_key       = "gameDateTimeEst"
+    projection_type = "ALL"
+  }
+
   tags = merge(
     var.tags,
     {

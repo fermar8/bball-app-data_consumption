@@ -44,6 +44,7 @@ class GamesRepository:
 
         return NbaGame(
             gameId=item['gameId'],
+            leagueKey=item.get('leagueKey', 'NBA'),
             gameDateEst=item.get('gameDateEst', ''),
             gameDateTimeEst=item.get('gameDateTimeEst', ''),
             gameStatus=int(item.get('gameStatus', 0)),

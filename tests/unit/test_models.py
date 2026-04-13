@@ -109,6 +109,7 @@ class TestNbaGameModel:
         }
         game = NbaGame.from_raw(raw)
         assert game.gameId == '0022500001'
+        assert game.leagueKey == 'NBA'
         assert game.gameStatus == 1
         assert game.homeTeamId == 1610612747
         assert game.awayTeamTricode == 'BOS'
@@ -128,6 +129,7 @@ class TestNbaGameModel:
             awayTeamTricode='BOS',
         )
         data = game.to_dict()
+        assert data['leagueKey'] == 'NBA'
         assert 'homeTeamScore' not in data
         assert 'awayTeamWins' not in data
         assert data['gameId'] == '0022500001'

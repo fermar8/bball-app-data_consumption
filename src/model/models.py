@@ -48,6 +48,7 @@ class NbaGame:
     """NBA game model matching the games DynamoDB table structure."""
 
     gameId: str = ""
+    leagueKey: str = "NBA"
     gameDateEst: str = ""
     gameDateTimeEst: str = ""
     gameStatus: int = 0
@@ -72,6 +73,7 @@ class NbaGame:
         """Convert model to a sparse dictionary for persistence."""
         item = {
             'gameId': self.gameId,
+            'leagueKey': self.leagueKey,
             'gameDateEst': self.gameDateEst,
             'gameDateTimeEst': self.gameDateTimeEst,
             'gameStatus': self.gameStatus,
@@ -108,6 +110,7 @@ class NbaGame:
         """Map a raw schedule_league_v2 game dict to an NbaGame instance."""
         return cls(
             gameId=str(raw['gameId']),
+            leagueKey='NBA',
             gameDateEst=raw['gameDateEst'],
             gameDateTimeEst=raw['gameDateTimeEst'],
             gameStatus=int(raw['gameStatus']),

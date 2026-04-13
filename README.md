@@ -56,6 +56,28 @@ terraform/resources/  # Infrastructure (per-environment)
 | **Lambda**         | `bball-app-data-consumption-games-nonlive` | `bball-app-data-consumption-games-live` |
 | **DynamoDB table** | `bball-app-data-consumption-games-nonlive` | `bball-app-data-consumption-games-live` |
 
+#### Data Model and Indexes
+
+- Table PK: `gameId` (String)
+- `leagueKey` is persisted as a constant (`NBA`) to support global timeframe queries.
+
+GSIs:
+
+- `byHomeTeamDateTime`
+  - PK: `homeTeamId` (Number)
+  - SK: `gameDateTimeEst` (String)
+- `byAwayTeamDateTime`
+  - PK: `awayTeamId` (Number)
+  - SK: `gameDateTimeEst` (String)
+- `byLeagueDateTime`
+  - PK: `leagueKey` (String)
+  - SK: `gameDateTimeEst` (String)
+
+Query patterns:
+
+- Team games in a timeframe: query both team GSIs (home and away), then merge/sort by `gameDateTimeEst`.
+- All games in any timeframe: query `byLeagueDateTime` with `leagueKey=NBA` and a sort-key range.
+
 **Default scheduler behavior (no custom input):**
 
 1. Fetch latest raw document from `s3://{bucket}/raw/schedule_league_v2/`
