@@ -65,6 +65,10 @@ terraform/resources/  # Infrastructure (per-environment)
 6. Add Terraform resources (Lambda, DynamoDB table, IAM policies)
 7. Add tests under `tests/unit/messaging/`, `tests/unit/services/`, and `tests/integration/`
 
+## Dependency Management
+
+Dependencies are automatically updated via **Dependabot**: see [`.github/dependabot.yml`](.github/dependabot.yml) for configuration.
+
 ## Running Locally
 
 ```bash
