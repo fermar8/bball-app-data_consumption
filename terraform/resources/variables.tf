@@ -93,3 +93,15 @@ variable "games_refresh_days" {
     error_message = "Games refresh days must be greater than or equal to 1."
   }
 }
+
+variable "players_index_function_name" {
+  description = "Name of the players_index Lambda function (without environment suffix)"
+  type        = string
+  default     = "bball-app-data-consumption-players-index"
+}
+
+variable "players_index_scheduler_enabled" {
+  description = "Whether the players_index scheduler should be enabled"
+  type        = bool
+  default     = false
+}

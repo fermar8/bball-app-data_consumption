@@ -62,3 +62,27 @@ class PlayersIndexHandler:
                 'statusCode': 500,
                 'body': json.dumps({'error': 'Internal server error'}),
             }
+
+
+def lambda_handler(event, context):
+    """Lambda entry point for data-consumption-players-index."""
+    logger.setLevel(logging.INFO)
+    logger.info("Processing Lambda request")
+    logger.info("Event: %s", json.dumps(event))
+
+    try:
+        DynamoDBConnection.initialize()
+
+        handler = PlayersIndexHandler()
+        response = handler.handle(event=event)
+
+        logger.info("Response status: %s", response.get('statusCode'))
+        return response
+
+    except Exception as exc:
+        logger.error("Unhandled error in lambda_handler: %s", exc, exc_info=True)
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': 'Internal server error'}),
+        }
+
