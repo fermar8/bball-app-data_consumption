@@ -57,7 +57,7 @@ class PlayersIndexHandler:
                 'body': json.dumps({'error': str(exc)}),
             }
         except Exception as exc:
-            logger.exception("Unexpected error: %s", exc)
+            logger.error("Error processing request: %s", exc, exc_info=True)
             return {
                 'statusCode': 500,
                 'body': json.dumps({'error': 'Internal server error'}),

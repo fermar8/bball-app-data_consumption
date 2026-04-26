@@ -57,3 +57,28 @@ output "games_scheduler_rule_name" {
   description = "Name of the games scheduler rule"
   value       = aws_cloudwatch_event_rule.games_daily.name
 }
+
+output "players_index_lambda_function_name" {
+  description = "Name of the players_index Lambda function"
+  value       = aws_lambda_function.players_index_function.function_name
+}
+
+output "players_index_lambda_function_arn" {
+  description = "ARN of the players_index Lambda function"
+  value       = aws_lambda_function.players_index_function.arn
+}
+
+output "players_index_dynamodb_table_name" {
+  description = "Name of the players_index DynamoDB table"
+  value       = aws_dynamodb_table.players_index.name
+}
+
+output "players_index_dynamodb_table_arn" {
+  description = "ARN of the players_index DynamoDB table"
+  value       = aws_dynamodb_table.players_index.arn
+}
+
+output "players_index_scheduler_rule_name" {
+  description = "Name of the players_index scheduler rule"
+  value       = aws_cloudwatch_event_rule.players_index_weekly.name
+}
