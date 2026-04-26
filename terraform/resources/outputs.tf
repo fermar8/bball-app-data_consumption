@@ -32,3 +32,28 @@ output "dynamodb_table_arn" {
   description = "ARN of the teams-static DynamoDB table"
   value       = aws_dynamodb_table.teams_static.arn
 }
+
+output "games_lambda_function_name" {
+  description = "Name of the games Lambda function"
+  value       = aws_lambda_function.games_function.function_name
+}
+
+output "games_lambda_function_arn" {
+  description = "ARN of the games Lambda function"
+  value       = aws_lambda_function.games_function.arn
+}
+
+output "games_dynamodb_table_name" {
+  description = "Name of the games DynamoDB table"
+  value       = aws_dynamodb_table.games.name
+}
+
+output "games_dynamodb_table_arn" {
+  description = "ARN of the games DynamoDB table"
+  value       = aws_dynamodb_table.games.arn
+}
+
+output "games_scheduler_rule_name" {
+  description = "Name of the games scheduler rule"
+  value       = aws_cloudwatch_event_rule.games_daily.name
+}

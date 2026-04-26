@@ -49,6 +49,103 @@ terraform/resources/  # Infrastructure (per-environment)
 
 **Handler:** `src.messaging.teams_static_handler.lambda_handler`
 
+### games
+
+|                    | Nonlive                                    | Live                                    |
+| ------------------ | ------------------------------------------ | --------------------------------------- |
+| **Lambda**         | `bball-app-data-consumption-games-nonlive` | `bball-app-data-consumption-games-live` |
+| **DynamoDB table** | `bball-app-data-consumption-games-nonlive` | `bball-app-data-consumption-games-live` |
+
+#### Data Model and Indexes
+
+- Table PK: `gameId` (String)
+- `leagueKey` is persisted as a constant (`NBA`) to support global timeframe queries.
+
+GSIs:
+
+- `byHomeTeamDateTime`
+  - PK: `homeTeamId` (Number)
+  - SK: `gameDateTimeEst` (String)
+- `byAwayTeamDateTime`
+  - PK: `awayTeamId` (Number)
+  - SK: `gameDateTimeEst` (String)
+- `byLeagueDateTime`
+  - PK: `leagueKey` (String)
+  - SK: `gameDateTimeEst` (String)
+
+Query patterns:
+
+- Team games in a timeframe: query both team GSIs (home and away), then merge/sort by `gameDateTimeEst`.
+- All games in any timeframe: query `byLeagueDateTime` with `leagueKey=NBA` and a sort-key range.
+
+**Default scheduler behavior (no custom input):**
+
+1. Fetch latest raw document from `s3://{bucket}/raw/schedule_league_v2/`
+2. Validate against `games-raw-schema.json`
+3. Map only regular-season NBA-vs-NBA games
+4. Select candidates from **today 00:00 UTC** through **today + 14 days** (configurable with `GAMES_REFRESH_DAYS`)
+5. Exclude FINAL games by default
+6. Upsert only changed items (hash-based write skip)
+
+#### Manual Input Options (for ad-hoc invocation)
+
+Provide options under `event.input` when invoking manually.
+
+| Option                         | Type    | Default                                   | Description                                                                      |
+| ------------------------------ | ------- | ----------------------------------------- | -------------------------------------------------------------------------------- |
+| `write_all_season_games`       | boolean | `false`                                   | When `true`, process all mapped regular-season NBA-vs-NBA games (backfill mode). |
+| `from_date_utc`                | string  | `null`                                    | ISO datetime lower bound (inclusive) for replay mode.                            |
+| `to_date_utc`                  | string  | `null`                                    | ISO datetime upper bound (inclusive) for replay mode. Requires `from_date_utc`.  |
+| `replay_until_default_horizon` | boolean | `false`                                   | In replay mode, cap replay upper bound at today + `refresh_days`.                |
+| `include_final_games`          | boolean | `null`                                    | Include FINAL games in candidate selection.                                      |
+| `refresh_days`                 | integer | env (`GAMES_REFRESH_DAYS`, fallback `14`) | Horizon days used by default mode and replay-until-default-horizon mode.         |
+
+#### Validation Rules
+
+1. Unknown keys inside `event.input` are rejected.
+2. `write_all_season_games` cannot be combined with replay range options.
+3. `to_date_utc` requires `from_date_utc`.
+4. `to_date_utc` and `replay_until_default_horizon` are mutually exclusive.
+5. `to_date_utc` must be greater than or equal to `from_date_utc`.
+6. `refresh_days` must be an integer >= 1.
+
+#### Examples
+
+Backfill full season:
+
+```json
+{
+  "input": {
+    "write_all_season_games": true,
+    "include_final_games": true
+  }
+}
+```
+
+Replay from a date to a date:
+
+```json
+{
+  "input": {
+    "from_date_utc": "2026-03-01T00:00:00Z",
+    "to_date_utc": "2026-03-10T23:59:59Z",
+    "include_final_games": true
+  }
+}
+```
+
+Replay from a date until default horizon:
+
+```json
+{
+  "input": {
+    "from_date_utc": "2026-03-01T00:00:00Z",
+    "replay_until_default_horizon": true,
+    "include_final_games": true
+  }
+}
+```
+
 ## Monitoring (live only)
 
 - **CloudWatch Alarm** on Lambda `Errors` metric — triggers if errors > 0 over two consecutive 5-minute periods

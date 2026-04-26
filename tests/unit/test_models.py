@@ -4,6 +4,7 @@ Unit tests for the NbaTeam model.
 import pytest
 
 from src.model.models import NbaTeam
+from src.model.models import NbaGame
 
 
 class TestNbaTeamModel:
@@ -81,3 +82,71 @@ class TestNbaTeamModel:
         assert d['fullName'] == 'Boston Celtics'
         assert d['abbreviation'] == 'BOS'
         assert d['nickname'] == 'Celtics'
+
+
+class TestNbaGameModel:
+    """Unit tests for NbaGame dataclass."""
+
+    def test_from_raw_maps_required_fields(self):
+        raw = {
+            'gameId': '0022500001',
+            'gameStatus': 1,
+            'gameStatusText': 'Scheduled',
+            'gameDateEst': '2025-10-22T00:00:00Z',
+            'gameDateTimeEst': '2025-10-22T19:30:00Z',
+            'homeTeam': {
+                'teamId': 1610612747,
+                'teamName': 'Lakers',
+                'teamTricode': 'LAL',
+            },
+            'awayTeam': {
+                'teamId': 1610612738,
+                'teamName': 'Celtics',
+                'teamTricode': 'BOS',
+            },
+            'arenaName': 'Crypto.com Arena',
+            'arenaCity': 'Los Angeles',
+        }
+        game = NbaGame.from_raw(raw)
+        assert game.gameId == '0022500001'
+        assert game.leagueKey == 'NBA'
+        assert game.gameStatus == 1
+        assert game.homeTeamId == 1610612747
+        assert game.awayTeamTricode == 'BOS'
+
+    def test_to_dict_omits_missing_optional_fields(self):
+        game = NbaGame(
+            gameId='0022500001',
+            gameDateEst='2025-10-22T00:00:00Z',
+            gameDateTimeEst='2025-10-22T19:30:00Z',
+            gameStatus=1,
+            gameStatusText='Scheduled',
+            homeTeamId=1610612747,
+            homeTeamName='Lakers',
+            homeTeamTricode='LAL',
+            awayTeamId=1610612738,
+            awayTeamName='Celtics',
+            awayTeamTricode='BOS',
+        )
+        data = game.to_dict()
+        assert data['leagueKey'] == 'NBA'
+        assert 'homeTeamScore' not in data
+        assert 'awayTeamWins' not in data
+        assert data['gameId'] == '0022500001'
+
+    def test_to_dict_trims_status_text(self):
+        game = NbaGame(
+            gameId='0022500002',
+            gameDateEst='2025-10-22T00:00:00Z',
+            gameDateTimeEst='2025-10-22T20:30:00Z',
+            gameStatus=3,
+            gameStatusText='Final   ',
+            homeTeamId=1610612747,
+            homeTeamName='Lakers',
+            homeTeamTricode='LAL',
+            awayTeamId=1610612738,
+            awayTeamName='Celtics',
+            awayTeamTricode='BOS',
+        )
+        data = game.to_dict()
+        assert data['gameStatusText'] == 'Final'
