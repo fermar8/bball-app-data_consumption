@@ -84,7 +84,7 @@ variable "games_scheduler_enabled" {
 }
 
 variable "games_refresh_days" {
-  description = "How many days to look back when selecting games to refresh"
+  description = "How many days ahead to look when selecting games to refresh"
   type        = number
   default     = 14
 
