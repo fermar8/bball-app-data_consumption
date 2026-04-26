@@ -76,7 +76,7 @@ def _parse_utc_datetime(value: str) -> datetime:
     try:
         return datetime.fromisoformat(value.replace('Z', '+00:00')).astimezone(timezone.utc)
     except ValueError as exc:
-        raise ValueError("from_date_utc must be a valid ISO datetime") from exc
+        raise ValueError("must be a valid ISO datetime") from exc
 
 
 def _is_nba_team(team_id: int) -> bool:
