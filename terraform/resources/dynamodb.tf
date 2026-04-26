@@ -82,3 +82,25 @@ resource "aws_dynamodb_table" "games" {
     }
   )
 }
+
+# DynamoDB table for players_index data
+# Created per environment: bball-app-data-consumption-players-index-nonlive / bball-app-data-consumption-players-index-live
+
+resource "aws_dynamodb_table" "players_index" {
+  name         = "${var.players_index_function_name}-${var.environment}"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "playerId"
+
+  attribute {
+    name = "playerId"
+    type = "N"
+  }
+
+  tags = merge(
+    var.tags,
+    {
+      Name        = "${var.players_index_function_name}-${var.environment}"
+      Environment = var.environment
+    }
+  )
+}

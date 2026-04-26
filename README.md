@@ -146,6 +146,39 @@ Replay from a date until default horizon:
 }
 ```
 
+### players_index
+
+|                    | Nonlive                                          | Live                                          |
+| ------------------ | ------------------------------------------------ | --------------------------------------------- |
+| **Lambda**         | `bball-app-data-consumption-players-index-nonlive` | `bball-app-data-consumption-players-index-live` |
+| **DynamoDB table** | `bball-app-data-consumption-players-index-nonlive` | `bball-app-data-consumption-players-index-live` |
+
+#### Data Model and Indexes
+
+- Table PK: `playerId` (Number)
+- No GSIs (MVP).
+- Each item stores roster fields such as first/last name, position, jersey number, height, country, and roster status.
+
+Query patterns:
+
+- Fetch current player by id: `GetItem` by `playerId`.
+- Load complete roster snapshot: table scan (acceptable for current dataset size).
+
+**Handler:** `src.messaging.players_index_handler.lambda_handler`
+
+**Default scheduler behavior (no custom input):**
+
+1. Fetch latest raw document from `s3://{bucket}/raw/player_index/`
+2. Validate against `player-index-raw-schema.json`
+3. Extract `PlayerIndex` result set from `payload.resultSets`
+4. Map rows to `NbaPlayer`
+5. Upsert only changed items (hash-based write skip)
+
+**Scheduler:** `cron(0 13 ? * MON *)` (Monday 13:00 UTC)
+
+Disabled by default in Terraform (`players_index_scheduler_enabled=false`).
+Weekly cadence is used because roster metadata changes less frequently than game schedules.
+
 ## Monitoring (live only)
 
 - **CloudWatch Alarm** on Lambda `Errors` metric — triggers if errors > 0 over two consecutive 5-minute periods

@@ -136,3 +136,57 @@ def _to_optional_int(value) -> Optional[int]:
     if value is None:
         return None
     return int(value)
+
+
+@dataclass
+class NbaPlayer:
+    """NBA player model matching the players_index DynamoDB table structure."""
+
+    playerId: int = 0
+    firstName: str = ""
+    lastName: str = ""
+    position: str = ""
+    jerseyNumber: Optional[int] = None
+    height: str = ""
+    country: str = ""
+    rosterStatus: int = 0
+    dataHash: Optional[str] = None
+
+    def to_dict(self) -> dict:
+        """Convert model to a sparse dictionary for persistence."""
+        item = {
+            'playerId': self.playerId,
+            'firstName': self.firstName,
+            'lastName': self.lastName,
+            'position': self.position,
+            'height': self.height,
+            'country': self.country,
+            'rosterStatus': self.rosterStatus,
+        }
+        if self.jerseyNumber is not None:
+            item['jerseyNumber'] = self.jerseyNumber
+        if self.dataHash:
+            item['dataHash'] = self.dataHash
+        return item
+
+    @classmethod
+    def from_raw(cls, raw: dict) -> 'NbaPlayer':
+        """
+        Map a raw player_index dict from nba_api / S3 to an NbaPlayer instance.
+
+        Args:
+            raw: Raw dict with keys PERSON_ID, PLAYER_FIRST_NAME, PLAYER_LAST_NAME, etc.
+
+        Returns:
+            NbaPlayer instance.
+        """
+        return cls(
+            playerId=int(raw['PERSON_ID']),
+            firstName=raw['PLAYER_FIRST_NAME'].strip(),
+            lastName=raw['PLAYER_LAST_NAME'].strip(),
+            position=str(raw.get('POSITION', '')).strip(),
+            jerseyNumber=_to_optional_int(raw.get('JERSEY_NUMBER')),
+            height=str(raw.get('HEIGHT', '')).strip(),
+            country=str(raw.get('COUNTRY', '')).strip(),
+            rosterStatus=int(raw.get('ROSTER_STATUS', 0)),
+        )

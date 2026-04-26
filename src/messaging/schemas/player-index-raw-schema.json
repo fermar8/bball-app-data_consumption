@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Player Index Raw Payload Schema",
+  "description": "Schema for raw player_index documents consumed from S3",
+  "type": "object",
+  "required": [
+    "source",
+    "endpoint",
+    "fetched_at_utc",
+    "aws_account_id",
+    "params",
+    "payload"
+  ],
+  "properties": {
+    "source": {
+      "type": "string",
+      "const": "nba_api"
+    },
+    "endpoint": {
+      "type": "string",
+      "const": "player_index"
+    },
+    "fetched_at_utc": {
+      "type": "string",
+      "minLength": 1
+    },
+    "aws_account_id": {
+      "type": "string",
+      "pattern": "^[0-9]{12}$"
+    },
+    "params": {
+      "type": "object"
+    },
+    "payload": {
+      "type": "object",
+      "required": ["resource", "parameters", "resultSets"],
+      "properties": {
+        "resource": {},
+        "parameters": {
+          "type": "object"
+        },
+        "resultSets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "headers", "rowSet"],
+            "properties": {
+              "name": {
+                "type": ["string", "null"]
+              },
+              "headers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "rowSet": {
+                "type": "array",
+                "items": {
+                  "type": "array"
+                }
+              }
+            },
+            "additionalProperties": true
+          },
+          "contains": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": {
+                "const": "PlayerIndex"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

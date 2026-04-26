@@ -5,6 +5,7 @@ import pytest
 
 from src.model.models import NbaTeam
 from src.model.models import NbaGame
+from src.model.models import NbaPlayer
 
 
 class TestNbaTeamModel:
@@ -150,3 +151,133 @@ class TestNbaGameModel:
         )
         data = game.to_dict()
         assert data['gameStatusText'] == 'Final'
+
+
+class TestNbaPlayerModel:
+    """Unit tests for NbaPlayer dataclass."""
+
+    def test_from_raw_maps_required_fields(self):
+        raw = {
+            'PERSON_ID': 2544,
+            'PLAYER_FIRST_NAME': 'LeBron',
+            'PLAYER_LAST_NAME': 'James',
+            'POSITION': 'F',
+            'JERSEY_NUMBER': 23,
+            'HEIGHT': '6-9',
+            'COUNTRY': 'USA',
+            'ROSTER_STATUS': 1,
+        }
+        player = NbaPlayer.from_raw(raw)
+        assert player.playerId == 2544
+        assert player.firstName == 'LeBron'
+        assert player.lastName == 'James'
+        assert player.position == 'F'
+        assert player.jerseyNumber == 23
+        assert player.height == '6-9'
+        assert player.country == 'USA'
+        assert player.rosterStatus == 1
+
+    def test_from_raw_coerces_person_id_to_int(self):
+        raw = {
+            'PERSON_ID': '2544',
+            'PLAYER_FIRST_NAME': 'LeBron',
+            'PLAYER_LAST_NAME': 'James',
+        }
+        player = NbaPlayer.from_raw(raw)
+        assert isinstance(player.playerId, int)
+        assert player.playerId == 2544
+
+    def test_from_raw_handles_missing_optional_fields(self):
+        raw = {
+            'PERSON_ID': 1234,
+            'PLAYER_FIRST_NAME': 'Rookie',
+            'PLAYER_LAST_NAME': 'Player',
+        }
+        player = NbaPlayer.from_raw(raw)
+        assert player.position == ''
+        assert player.jerseyNumber is None
+        assert player.height == ''
+        assert player.country == ''
+        assert player.rosterStatus == 0
+
+    def test_from_raw_strips_whitespace_in_text_fields(self):
+        raw = {
+            'PERSON_ID': 1,
+            'PLAYER_FIRST_NAME': '  LeBron  ',
+            'PLAYER_LAST_NAME': '  James  ',
+            'POSITION': '  F  ',
+            'HEIGHT': '  6-9  ',
+            'COUNTRY': '  USA  ',
+        }
+        player = NbaPlayer.from_raw(raw)
+        assert player.firstName == 'LeBron'
+        assert player.lastName == 'James'
+        assert player.position == 'F'
+        assert player.height == '6-9'
+        assert player.country == 'USA'
+
+    def test_from_raw_raises_on_missing_required_fields(self):
+        with pytest.raises(KeyError):
+            NbaPlayer.from_raw({'PLAYER_FIRST_NAME': 'No ID'})
+
+    def test_to_dict_includes_required_fields(self):
+        player = NbaPlayer(
+            playerId=2544,
+            firstName='LeBron',
+            lastName='James',
+            position='F',
+            jerseyNumber=23,
+            height='6-9',
+            country='USA',
+            rosterStatus=1,
+        )
+        data = player.to_dict()
+        assert data['playerId'] == 2544
+        assert data['firstName'] == 'LeBron'
+        assert data['lastName'] == 'James'
+        assert data['position'] == 'F'
+        assert data['jerseyNumber'] == 23
+        assert data['height'] == '6-9'
+        assert data['country'] == 'USA'
+        assert data['rosterStatus'] == 1
+
+    def test_to_dict_omits_missing_optional_fields(self):
+        player = NbaPlayer(
+            playerId=2544,
+            firstName='LeBron',
+            lastName='James',
+        )
+        data = player.to_dict()
+        assert 'jerseyNumber' not in data
+        assert 'dataHash' not in data
+        assert data['playerId'] == 2544
+
+    def test_default_values(self):
+        player = NbaPlayer()
+        assert player.playerId == 0
+        assert player.firstName == ''
+        assert player.lastName == ''
+        assert player.position == ''
+        assert player.jerseyNumber is None
+        assert player.height == ''
+        assert player.country == ''
+        assert player.rosterStatus == 0
+        assert player.dataHash is None
+
+    def test_roundtrip_from_raw_to_dict(self):
+        raw = {
+            'PERSON_ID': 201939,
+            'PLAYER_FIRST_NAME': 'Stephen',
+            'PLAYER_LAST_NAME': 'Curry',
+            'POSITION': 'G',
+            'JERSEY_NUMBER': 30,
+            'HEIGHT': '6-2',
+            'COUNTRY': 'USA',
+            'ROSTER_STATUS': 1,
+        }
+        data = NbaPlayer.from_raw(raw).to_dict()
+        assert data['playerId'] == 201939
+        assert data['firstName'] == 'Stephen'
+        assert data['lastName'] == 'Curry'
+        assert data['jerseyNumber'] == 30
+        assert data['rosterStatus'] == 1
