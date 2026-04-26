@@ -138,7 +138,6 @@ class TestPlayersIndexIntegration:
 
     @mock_aws
     def test_hash_prevents_duplicate_writes(self, aws_credentials, s3_bucket_with_player_index):
-        lambda_handler({}, None)
         response1 = lambda_handler({}, None)
 
         body1 = json.loads(response1['body'])
