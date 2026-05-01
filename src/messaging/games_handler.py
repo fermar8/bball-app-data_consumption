@@ -68,10 +68,11 @@ class GamesHandler:
             }
 
         except ValidationError as exc:
-            logger.error("Schema validation error: %s", exc.message)
+            field_path = '.'.join(str(p) for p in exc.absolute_path) if exc.absolute_path else 'root'
+            logger.error("Schema validation error at '%s': %s", field_path, exc.message)
             return {
                 'statusCode': 400,
-                'body': json.dumps({'error': f'Validation error: {exc.message}'}),
+                'body': json.dumps({'error': f'Validation error at {field_path}: {exc.message}'}),
             }
         except (FileNotFoundError, ValueError) as exc:
             logger.error("Data error: %s", exc)
