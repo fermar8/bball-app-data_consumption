@@ -68,7 +68,7 @@ class GamesHandler:
             }
 
         except ValidationError as exc:
-            logger.warning("Schema validation error: %s", exc.message)
+            logger.error("Schema validation error: %s", exc.message)
             return {
                 'statusCode': 400,
                 'body': json.dumps({'error': f'Validation error: {exc.message}'}),

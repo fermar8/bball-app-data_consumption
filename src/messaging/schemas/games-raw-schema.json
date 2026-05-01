@@ -71,7 +71,7 @@
                           "type": "integer"
                         },
                         "gameStatusText": {
-                          "type": "string"
+                          "type": ["string", "null"]
                         },
                         "gameDateEst": {
                           "type": "string",
@@ -82,13 +82,13 @@
                           "minLength": 1
                         },
                         "gameLabel": {
-                          "type": "string"
+                          "type": ["string", "null"]
                         },
                         "arenaName": {
-                          "type": "string"
+                          "type": ["string", "null"]
                         },
                         "arenaCity": {
-                          "type": "string"
+                          "type": ["string", "null"]
                         },
                         "homeTeam": {
                           "type": "object",
