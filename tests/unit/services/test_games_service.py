@@ -24,7 +24,7 @@ RAW_DOCUMENT = {
                             'gameStatusText': 'Scheduled',
                             'gameDateEst': '2099-10-22T00:00:00Z',
                             'gameDateTimeEst': '2099-10-22T19:30:00Z',
-                            'gameLabel': 'Regular Season',
+                            'gameLabel': '',
                             'homeTeam': {
                                 'teamId': 1610612747,
                                 'teamName': 'Lakers',

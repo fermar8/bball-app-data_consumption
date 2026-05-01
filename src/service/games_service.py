@@ -85,7 +85,10 @@ def _is_nba_team(team_id: int) -> bool:
 
 def _is_regular_season_game(raw_game: Dict[str, Any]) -> bool:
     game_label = str(raw_game.get('gameLabel', '')).strip().lower()
-    if game_label != 'regular season':
+    
+    # Regular season games have empty gameLabel
+    # Filter out preseason, playoffs, play-in, all-star, etc.
+    if game_label and game_label != 'regular season':
         return False
 
     home_team_id = int(raw_game['homeTeam']['teamId'])
@@ -97,7 +100,7 @@ def _is_regular_season_game(raw_game: Dict[str, Any]) -> bool:
     home_team_tricode = raw_game['homeTeam'].get('teamTricode')
     away_team_tricode = raw_game['awayTeam'].get('teamTricode')
     
-    if not all([home_team_name, away_team_name, home_team_tricode, away_team_tricode]):
+    if home_team_name is None or away_team_name is None or home_team_tricode is None or away_team_tricode is None:
         return False
     
     return _is_nba_team(home_team_id) and _is_nba_team(away_team_id)

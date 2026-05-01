@@ -79,7 +79,7 @@ def s3_bucket_with_schedule(aws_credentials, dynamodb_table):
                                     'gameStatusText': 'Scheduled',
                                     'gameDateEst': '2025-10-03T00:00:00Z',
                                     'gameDateTimeEst': '2025-10-03T22:00:00Z',
-                                    'gameLabel': 'Regular Season',
+                                    'gameLabel': '',
                                     'arenaName': 'Acrisure Arena',
                                     'arenaCity': 'Palm Desert',
                                     'homeTeam': {
@@ -124,7 +124,7 @@ def s3_bucket_with_schedule(aws_credentials, dynamodb_table):
                                     'gameStatusText': 'Final',
                                     'gameDateEst': '2025-10-03T00:00:00Z',
                                     'gameDateTimeEst': '2025-10-03T22:00:00Z',
-                                    'gameLabel': 'Regular Season',
+                                    'gameLabel': '',
                                     'arenaName': 'Acrisure Arena',
                                     'arenaCity': 'Palm Desert',
                                     'homeTeam': {
