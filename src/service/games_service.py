@@ -90,6 +90,16 @@ def _is_regular_season_game(raw_game: Dict[str, Any]) -> bool:
 
     home_team_id = int(raw_game['homeTeam']['teamId'])
     away_team_id = int(raw_game['awayTeam']['teamId'])
+    
+    # Ensure team names and tricodes are not null (defensive check)
+    home_team_name = raw_game['homeTeam'].get('teamName')
+    away_team_name = raw_game['awayTeam'].get('teamName')
+    home_team_tricode = raw_game['homeTeam'].get('teamTricode')
+    away_team_tricode = raw_game['awayTeam'].get('teamTricode')
+    
+    if not all([home_team_name, away_team_name, home_team_tricode, away_team_tricode]):
+        return False
+    
     return _is_nba_team(home_team_id) and _is_nba_team(away_team_id)
 
 
