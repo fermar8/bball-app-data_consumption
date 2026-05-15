@@ -8,6 +8,8 @@
     "endpoint",
     "fetched_at_utc",
     "aws_account_id",
+    "schema_version",
+    "ingestion_id",
     "params",
     "payload"
   ],
@@ -28,19 +30,70 @@
       "type": "string",
       "pattern": "^[0-9]{12}$"
     },
+    "schema_version": {
+      "type": "string",
+      "const": "v1"
+    },
+    "ingestion_id": {
+      "type": "string",
+      "minLength": 1
+    },
     "params": {
-      "type": "object"
+      "type": "object",
+      "required": ["active"],
+      "properties": {
+        "active": {
+          "type": "integer",
+          "enum": [0, 1]
+        }
+      },
+      "additionalProperties": true
     },
     "payload": {
       "type": "object",
       "required": ["resource", "parameters", "resultSets"],
       "properties": {
-        "resource": {},
+        "resource": {
+          "type": "string",
+          "const": "playerindex"
+        },
         "parameters": {
-          "type": "object"
+          "type": "object",
+          "required": [
+            "LeagueID",
+            "Season",
+            "Historical",
+            "TeamID",
+            "Country",
+            "College",
+            "DraftYear",
+            "DraftPick",
+            "PlayerPosition",
+            "Height",
+            "Weight",
+            "Active",
+            "AllStar"
+          ],
+          "properties": {
+            "LeagueID": { "type": "string" },
+            "Season": { "type": "string" },
+            "Historical": { "type": "integer" },
+            "TeamID": { "type": "integer" },
+            "Country": { "type": ["string", "null"] },
+            "College": { "type": ["string", "null"] },
+            "DraftYear": { "type": ["string", "null"] },
+            "DraftPick": { "type": ["string", "null"] },
+            "PlayerPosition": { "type": "string" },
+            "Height": { "type": ["string", "null"] },
+            "Weight": { "type": ["string", "null"] },
+            "Active": { "type": "integer", "enum": [0, 1] },
+            "AllStar": { "type": "integer", "enum": [0, 1] }
+          },
+          "additionalProperties": false
         },
         "resultSets": {
           "type": "array",
+          "minItems": 1,
           "items": {
             "type": "object",
             "required": ["name", "headers", "rowSet"],
@@ -50,14 +103,41 @@
               },
               "headers": {
                 "type": "array",
-                "items": {
-                  "type": "string"
-                }
+                "items": { "type": "string" }
               },
               "rowSet": {
                 "type": "array",
                 "items": {
-                  "type": "array"
+                  "type": "array",
+                  "items": [
+                    { "type": "integer" },
+                    { "type": "string" },
+                    { "type": "string" },
+                    { "type": "string" },
+                    { "type": "integer" },
+                    { "type": "string" },
+                    { "type": "integer" },
+                    { "type": "string" },
+                    { "type": "string" },
+                    { "type": "string" },
+                    { "type": ["string", "null"] },
+                    { "type": ["string", "null"] },
+                    { "type": ["string", "null"] },
+                    { "type": ["string", "null"] },
+                    { "type": ["string", "null"] },
+                    { "type": ["string", "null"] },
+                    { "type": ["integer", "null"] },
+                    { "type": ["integer", "null"] },
+                    { "type": ["integer", "null"] },
+                    { "type": "integer" },
+                    { "type": ["string", "null"] },
+                    { "type": ["string", "null"] },
+                    { "type": ["number", "null"] },
+                    { "type": ["number", "null"] },
+                    { "type": ["number", "null"] },
+                    { "type": ["string", "null"] }
+                  ],
+                  "additionalItems": false
                 }
               }
             },
@@ -65,17 +145,47 @@
           },
           "contains": {
             "type": "object",
-            "required": ["name"],
+            "required": ["name", "headers"],
             "properties": {
               "name": {
                 "const": "PlayerIndex"
+              },
+              "headers": {
+                "const": [
+                  "PERSON_ID",
+                  "PLAYER_LAST_NAME",
+                  "PLAYER_FIRST_NAME",
+                  "PLAYER_SLUG",
+                  "TEAM_ID",
+                  "TEAM_SLUG",
+                  "IS_DEFUNCT",
+                  "TEAM_CITY",
+                  "TEAM_NAME",
+                  "TEAM_ABBREVIATION",
+                  "JERSEY_NUMBER",
+                  "POSITION",
+                  "HEIGHT",
+                  "WEIGHT",
+                  "COLLEGE",
+                  "COUNTRY",
+                  "DRAFT_YEAR",
+                  "DRAFT_ROUND",
+                  "DRAFT_NUMBER",
+                  "ROSTER_STATUS",
+                  "FROM_YEAR",
+                  "TO_YEAR",
+                  "PTS",
+                  "REB",
+                  "AST",
+                  "STATS_TIMEFRAME"
+                ]
               }
             }
-          },
-          "minContains": 1
+          }
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     }
-  }
+  },
+  "additionalProperties": false
 }

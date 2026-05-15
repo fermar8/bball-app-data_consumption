@@ -8,6 +8,36 @@ from src.model.models import NbaGame
 from src.model.models import NbaPlayer
 
 
+PLAYER_INDEX_SAMPLE = {
+    'PERSON_ID': 1630173,
+    'PLAYER_LAST_NAME': 'Achiuwa',
+    'PLAYER_FIRST_NAME': 'Precious',
+    'PLAYER_SLUG': 'precious-achiuwa',
+    'TEAM_ID': 1610612758,
+    'TEAM_SLUG': 'kings',
+    'IS_DEFUNCT': 0,
+    'TEAM_CITY': 'Sacramento',
+    'TEAM_NAME': 'Kings',
+    'TEAM_ABBREVIATION': 'SAC',
+    'JERSEY_NUMBER': '9',
+    'POSITION': 'F',
+    'HEIGHT': '6-8',
+    'WEIGHT': '243',
+    'COLLEGE': 'Memphis',
+    'COUNTRY': 'Nigeria',
+    'DRAFT_YEAR': 2020,
+    'DRAFT_ROUND': 1,
+    'DRAFT_NUMBER': 20,
+    'ROSTER_STATUS': 1,
+    'FROM_YEAR': '2020',
+    'TO_YEAR': '2025',
+    'PTS': 8.7,
+    'REB': 6.1,
+    'AST': 1.3,
+    'STATS_TIMEFRAME': 'Season',
+}
+
+
 class TestNbaTeamModel:
     """Unit tests for NbaTeam dataclass."""
 
@@ -157,24 +187,19 @@ class TestNbaPlayerModel:
     """Unit tests for NbaPlayer dataclass."""
 
     def test_from_raw_maps_required_fields(self):
-        raw = {
-            'PERSON_ID': 2544,
-            'PLAYER_FIRST_NAME': 'LeBron',
-            'PLAYER_LAST_NAME': 'James',
-            'POSITION': 'F',
-            'JERSEY_NUMBER': 23,
-            'HEIGHT': '6-9',
-            'COUNTRY': 'USA',
-            'ROSTER_STATUS': 1,
-        }
+        raw = dict(PLAYER_INDEX_SAMPLE)
         player = NbaPlayer.from_raw(raw)
-        assert player.playerId == 2544
-        assert player.firstName == 'LeBron'
-        assert player.lastName == 'James'
+        assert player.playerId == 1630173
+        assert player.firstName == 'Precious'
+        assert player.lastName == 'Achiuwa'
+        assert player.displayName == 'Precious Achiuwa'
+        assert player.teamId == 1610612758
+        assert player.teamName == 'Kings'
+        assert player.teamAbbreviation == 'SAC'
         assert player.position == 'F'
-        assert player.jerseyNumber == 23
-        assert player.height == '6-9'
-        assert player.country == 'USA'
+        assert player.jerseyNumber == '9'
+        assert player.height == '6-8'
+        assert player.country == 'Nigeria'
         assert player.rosterStatus == 1
 
     def test_from_raw_coerces_person_id_to_int(self):
@@ -199,22 +224,25 @@ class TestNbaPlayerModel:
         assert player.height == ''
         assert player.country == ''
         assert player.rosterStatus == 0
+        assert player.teamId == 0
+        assert player.teamName == ''
+        assert player.teamAbbreviation == ''
+        assert player.displayName == 'Rookie Player'
 
     def test_from_raw_strips_whitespace_in_text_fields(self):
-        raw = {
-            'PERSON_ID': 1,
-            'PLAYER_FIRST_NAME': '  LeBron  ',
-            'PLAYER_LAST_NAME': '  James  ',
-            'POSITION': '  F  ',
-            'HEIGHT': '  6-9  ',
-            'COUNTRY': '  USA  ',
-        }
+        raw = dict(PLAYER_INDEX_SAMPLE)
+        raw['PERSON_ID'] = 1
+        raw['PLAYER_FIRST_NAME'] = '  Precious  '
+        raw['PLAYER_LAST_NAME'] = '  Achiuwa  '
+        raw['POSITION'] = '  F  '
+        raw['HEIGHT'] = '  6-8  '
+        raw['COUNTRY'] = '  Nigeria  '
         player = NbaPlayer.from_raw(raw)
-        assert player.firstName == 'LeBron'
-        assert player.lastName == 'James'
+        assert player.firstName == 'Precious'
+        assert player.lastName == 'Achiuwa'
         assert player.position == 'F'
-        assert player.height == '6-9'
-        assert player.country == 'USA'
+        assert player.height == '6-8'
+        assert player.country == 'Nigeria'
 
     def test_from_raw_raises_on_missing_required_fields(self):
         with pytest.raises(KeyError):
@@ -225,8 +253,12 @@ class TestNbaPlayerModel:
             playerId=2544,
             firstName='LeBron',
             lastName='James',
+            displayName='LeBron James',
+            teamId=1610612747,
+            teamName='Lakers',
+            teamAbbreviation='LAL',
             position='F',
-            jerseyNumber=23,
+            jerseyNumber='23',
             height='6-9',
             country='USA',
             rosterStatus=1,
@@ -235,8 +267,12 @@ class TestNbaPlayerModel:
         assert data['playerId'] == 2544
         assert data['firstName'] == 'LeBron'
         assert data['lastName'] == 'James'
+        assert data['displayName'] == 'LeBron James'
+        assert data['teamId'] == 1610612747
+        assert data['teamName'] == 'Lakers'
+        assert data['teamAbbreviation'] == 'LAL'
         assert data['position'] == 'F'
-        assert data['jerseyNumber'] == 23
+        assert data['jerseyNumber'] == '23'
         assert data['height'] == '6-9'
         assert data['country'] == 'USA'
         assert data['rosterStatus'] == 1
@@ -270,7 +306,7 @@ class TestNbaPlayerModel:
             'PLAYER_FIRST_NAME': 'Stephen',
             'PLAYER_LAST_NAME': 'Curry',
             'POSITION': 'G',
-            'JERSEY_NUMBER': 30,
+            'JERSEY_NUMBER': '30',
             'HEIGHT': '6-2',
             'COUNTRY': 'USA',
             'ROSTER_STATUS': 1,
@@ -279,5 +315,5 @@ class TestNbaPlayerModel:
         assert data['playerId'] == 201939
         assert data['firstName'] == 'Stephen'
         assert data['lastName'] == 'Curry'
-        assert data['jerseyNumber'] == 30
+        assert data['jerseyNumber'] == '30'
         assert data['rosterStatus'] == 1

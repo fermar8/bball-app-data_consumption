@@ -156,13 +156,43 @@ Replay from a date until default horizon:
 #### Data Model and Indexes
 
 - Table PK: `playerId` (Number)
-- No GSIs (MVP).
-- Each item stores roster fields such as first/last name, position, jersey number, height, country, and roster status.
+- No GSIs (MVP). A `teamId`-based GSI is planned (see "Design decisions" below) once roster-by-team queries become a hot path.
+
+Persisted fields per item:
+
+| Field              | Type   | Source                                  | Notes                                                  |
+| ------------------ | ------ | --------------------------------------- | ------------------------------------------------------ |
+| `playerId`         | Number | `PERSON_ID`                             | PK                                                     |
+| `firstName`        | String | `PLAYER_FIRST_NAME`                     |                                                        |
+| `lastName`         | String | `PLAYER_LAST_NAME`                      |                                                        |
+| `displayName`      | String | derived (`firstName + lastName`)        | Convenience field for UI                               |
+| `teamId`           | Number | `TEAM_ID`                               | Denormalized current team (no JOIN at read time)       |
+| `teamName`         | String | `TEAM_NAME`                             | Denormalized                                           |
+| `teamAbbreviation` | String | `TEAM_ABBREVIATION`                     | Denormalized                                           |
+| `position`         | String | `POSITION`                              |                                                        |
+| `jerseyNumber`     | String | `JERSEY_NUMBER`                         | Stored as string to preserve values like `00`          |
+| `height`           | String | `HEIGHT`                                | Example `6-8`                                          |
+| `country`          | String | `COUNTRY`                               |                                                        |
+| `rosterStatus`     | Number | `ROSTER_STATUS`                         | `1` active, `0` inactive                               |
+| `dataHash`         | String | derived                                 | Used to skip unchanged writes                          |
 
 Query patterns:
 
 - Fetch current player by id: `GetItem` by `playerId`.
 - Load complete roster snapshot: table scan (acceptable for current dataset size).
+- Roster by team: planned via future GSI (`teamId` PK, `lastName` SK).
+
+#### Design decisions
+
+The shape above mirrors `Table 3: nba_players` in `bball-app-nba_api_client/docs/DATABASE_SCHEMA.md`. The following raw fields from the `PlayerIndex` result set are intentionally **not** persisted in this table:
+
+- `WEIGHT`, `COLLEGE`, `DRAFT_YEAR`, `DRAFT_ROUND`, `DRAFT_NUMBER`, `FROM_YEAR`, `TO_YEAR` — historical/biographical metadata not required for the fantasy MVP. Deferred to a future "player profile" extension if needed.
+- `PTS`, `REB`, `AST`, `STATS_TIMEFRAME` — aggregated season stats. These will live in a dedicated `nba_player_stats` table to keep `nba_players` lean and to allow per-game / per-season granularity.
+- `PLAYER_SLUG`, `TEAM_SLUG`, `TEAM_CITY`, `IS_DEFUNCT` — not consumed by current read patterns.
+
+Future denormalization:
+
+- `injuryStatus` (Map) will be added when the `nba_injuries` pipeline lands. The latest snapshot will be denormalized here so a single `GetItem` answers "is this player available?".
 
 **Handler:** `src.messaging.players_index_handler.lambda_handler`
 

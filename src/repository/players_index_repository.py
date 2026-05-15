@@ -37,17 +37,20 @@ class PlayersIndexRepository:
 
     @staticmethod
     def _item_to_model(item: Dict[str, Any]) -> NbaPlayer:
-        def to_int(key: str) -> Optional[int]:
-            if key not in item:
-                return None
-            return int(item[key])
+        jersey = item.get('jerseyNumber')
+        if jersey is not None:
+            jersey = str(jersey)
 
         return NbaPlayer(
             playerId=int(item['playerId']),
             firstName=item.get('firstName', ''),
             lastName=item.get('lastName', ''),
+            displayName=item.get('displayName', ''),
+            teamId=int(item.get('teamId', 0)),
+            teamName=item.get('teamName', ''),
+            teamAbbreviation=item.get('teamAbbreviation', ''),
             position=item.get('position', ''),
-            jerseyNumber=to_int('jerseyNumber'),
+            jerseyNumber=jersey,
             height=item.get('height', ''),
             country=item.get('country', ''),
             rosterStatus=int(item.get('rosterStatus', 0)),
