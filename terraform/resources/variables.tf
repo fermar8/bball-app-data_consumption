@@ -105,3 +105,15 @@ variable "players_index_scheduler_enabled" {
   type        = bool
   default     = false
 }
+
+variable "players_injuries_function_name" {
+  description = "Name of the players_injuries Lambda function (without environment suffix)"
+  type        = string
+  default     = "bball-app-data-consumption-players-injuries"
+}
+
+variable "players_injuries_scheduler_enabled" {
+  description = "Whether the players_injuries scheduler should be enabled"
+  type        = bool
+  default     = false
+}

@@ -317,3 +317,104 @@ class TestNbaPlayerModel:
         assert data['lastName'] == 'Curry'
         assert data['jerseyNumber'] == '30'
         assert data['rosterStatus'] == 1
+
+
+from src.model.models import NbaPlayerInjury
+
+
+INJURY_SAMPLE = {
+    'player_id': 2544,
+    'player_name': 'LeBron James',
+    'team_abbr': 'LAL',
+    'status': 'questionable',
+    'availability': 'doubtful',
+    'reason_type': 'injury',
+    'reason': 'Left knee soreness',
+    'report_date': '05/27/2026',
+}
+
+
+class TestNbaPlayerInjuryModel:
+    """Unit tests for NbaPlayerInjury dataclass."""
+
+    def test_from_raw_maps_required_fields(self):
+        injury = NbaPlayerInjury.from_raw(
+            INJURY_SAMPLE,
+            fetched_at='2026-05-28T13:00:00+00:00',
+        )
+        assert injury.playerId == 2544
+        assert injury.playerName == 'LeBron James'
+        assert injury.teamAbbr == 'LAL'
+        assert injury.status == 'questionable'
+        assert injury.availability == 'doubtful'
+        assert injury.reasonType == 'injury'
+        assert injury.reason == 'Left knee soreness'
+
+    def test_from_raw_normalizes_us_date_to_iso(self):
+        injury = NbaPlayerInjury.from_raw(
+            INJURY_SAMPLE,
+            fetched_at='2026-05-28T13:00:00+00:00',
+        )
+        assert injury.reportDate == '2026-05-27'
+
+    def test_from_raw_passes_through_iso_date(self):
+        raw = {**INJURY_SAMPLE, 'report_date': '2026-05-27'}
+        injury = NbaPlayerInjury.from_raw(raw, fetched_at='2026-05-28T13:00:00+00:00')
+        assert injury.reportDate == '2026-05-27'
+
+    def test_from_raw_builds_composite_injury_key(self):
+        injury = NbaPlayerInjury.from_raw(
+            INJURY_SAMPLE,
+            fetched_at='2026-05-28T13:00:00+00:00',
+        )
+        assert injury.injuryKey == '2026-05-27#2026-05-28T13:00:00+00:00'
+
+    def test_from_raw_stores_updated_at_when_provided(self):
+        injury = NbaPlayerInjury.from_raw(
+            INJURY_SAMPLE,
+            fetched_at='2026-05-28T13:00:00+00:00',
+            updated_at='2026-05-28T12:59:00+00:00',
+        )
+        assert injury.updatedAt == '2026-05-28T12:59:00+00:00'
+
+    def test_from_raw_raises_when_player_id_missing(self):
+        raw = {**INJURY_SAMPLE, 'player_id': None}
+        with pytest.raises(ValueError):
+            NbaPlayerInjury.from_raw(raw, fetched_at='2026-05-28T13:00:00+00:00')
+
+    def test_to_dict_contains_required_fields(self):
+        injury = NbaPlayerInjury.from_raw(
+            INJURY_SAMPLE,
+            fetched_at='2026-05-28T13:00:00+00:00',
+        )
+        data = injury.to_dict()
+        assert data['playerId'] == 2544
+        assert data['injuryKey'] == '2026-05-27#2026-05-28T13:00:00+00:00'
+        assert data['teamAbbr'] == 'LAL'
+        assert data['status'] == 'questionable'
+        assert data['reportDate'] == '2026-05-27'
+        assert data['fetchedAt'] == '2026-05-28T13:00:00+00:00'
+
+    def test_to_dict_omits_missing_optional_fields(self):
+        injury = NbaPlayerInjury(
+            playerId=2544,
+            injuryKey='2026-05-27#2026-05-28T13:00:00+00:00',
+            playerName='LeBron James',
+            teamAbbr='LAL',
+            status='out',
+            availability='no',
+            reasonType='injury',
+            reason='knee',
+            reportDate='2026-05-27',
+            fetchedAt='2026-05-28T13:00:00+00:00',
+        )
+        data = injury.to_dict()
+        assert 'updatedAt' not in data
+        assert 'dataHash' not in data
+
+    def test_default_values(self):
+        injury = NbaPlayerInjury()
+        assert injury.playerId == 0
+        assert injury.injuryKey == ''
+        assert injury.dataHash is None
+        assert injury.updatedAt is None
