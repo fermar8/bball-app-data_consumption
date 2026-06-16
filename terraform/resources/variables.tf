@@ -105,3 +105,15 @@ variable "players_index_scheduler_enabled" {
   type        = bool
   default     = false
 }
+
+variable "players_stats_function_name" {
+  description = "Name of the players_stats Lambda function (without environment suffix)"
+  type        = string
+  default     = "bball-app-data-consumption-players-stats"
+}
+
+variable "players_stats_scheduler_enabled" {
+  description = "Whether the players_stats scheduler should be enabled"
+  type        = bool
+  default     = false
+}
