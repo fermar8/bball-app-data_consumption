@@ -104,3 +104,50 @@ resource "aws_dynamodb_table" "players_index" {
     }
   )
 }
+
+# DynamoDB table for players_injuries data
+# Created per environment: bball-app-data-consumption-players-injuries-nonlive / bball-app-data-consumption-players-injuries-live
+# Composite key (playerId, injuryKey) keeps a history of daily reports per player.
+# GSI byTeamReportDate supports "injury list for one team" lookups.
+
+resource "aws_dynamodb_table" "players_injuries" {
+  name         = "${var.players_injuries_function_name}-${var.environment}"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "playerId"
+  range_key    = "injuryKey"
+
+  attribute {
+    name = "playerId"
+    type = "N"
+  }
+
+  attribute {
+    name = "injuryKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "teamAbbr"
+    type = "S"
+  }
+
+  attribute {
+    name = "reportDate"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "byTeamReportDate"
+    hash_key        = "teamAbbr"
+    range_key       = "reportDate"
+    projection_type = "ALL"
+  }
+
+  tags = merge(
+    var.tags,
+    {
+      Name        = "${var.players_injuries_function_name}-${var.environment}"
+      Environment = var.environment
+    }
+  )
+}
