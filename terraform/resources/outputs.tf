@@ -83,6 +83,31 @@ output "players_index_scheduler_rule_name" {
   value       = aws_cloudwatch_event_rule.players_index_weekly.name
 }
 
+output "players_stats_lambda_function_name" {
+  description = "Name of the players_stats Lambda function"
+  value       = aws_lambda_function.players_stats_function.function_name
+}
+
+output "players_stats_lambda_function_arn" {
+  description = "ARN of the players_stats Lambda function"
+  value       = aws_lambda_function.players_stats_function.arn
+}
+
+output "players_stats_dynamodb_table_name" {
+  description = "Name of the players_stats DynamoDB table"
+  value       = aws_dynamodb_table.players_stats.name
+}
+
+output "players_stats_dynamodb_table_arn" {
+  description = "ARN of the players_stats DynamoDB table"
+  value       = aws_dynamodb_table.players_stats.arn
+}
+
+output "players_stats_scheduler_rule_name" {
+  description = "Name of the players_stats scheduler rule"
+  value       = aws_cloudwatch_event_rule.players_stats_daily.name
+}
+
 output "players_injuries_lambda_function_name" {
   description = "Name of the players_injuries Lambda function"
   value       = aws_lambda_function.players_injuries_function.function_name

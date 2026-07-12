@@ -138,6 +138,15 @@ def _to_optional_int(value) -> Optional[int]:
     return int(value)
 
 
+def _to_optional_float(value) -> Optional[float]:
+    if value is None or value == '':
+        return None
+    if isinstance(value, str) and ':' in value:
+        minutes_str, seconds_str = value.split(':', 1)
+        return float(minutes_str) + (float(seconds_str) / 60.0)
+    return float(value)
+
+
 @dataclass
 class NbaPlayer:
     """NBA player model matching the players_index DynamoDB table structure.
@@ -214,6 +223,160 @@ class NbaPlayer:
             height=str(raw.get('HEIGHT', '') or '').strip(),
             country=str(raw.get('COUNTRY', '') or '').strip(),
             rosterStatus=int(raw.get('ROSTER_STATUS') or 0),
+        )
+
+
+@dataclass
+class NbaPlayerGameLog:
+    """NBA player game log model matching the player-game-logs DynamoDB table."""
+
+    playerId: int = 0
+    playerName: str = ""
+    nickname: str = ""
+    teamId: int = 0
+    teamAbbreviation: str = ""
+    teamName: str = ""
+    gameId: str = ""
+    gameDate: str = ""
+    matchup: str = ""
+    winLoss: str = ""
+    minutes: str = ""
+    minutesDecimal: Optional[float] = None
+    seasonYear: str = ""
+    fgm: int = 0
+    fga: int = 0
+    fgPct: Optional[float] = None
+    fg3m: int = 0
+    fg3a: int = 0
+    fg3Pct: Optional[float] = None
+    ftm: int = 0
+    fta: int = 0
+    ftPct: Optional[float] = None
+    oreb: int = 0
+    dreb: int = 0
+    reb: int = 0
+    ast: int = 0
+    tov: int = 0
+    stl: int = 0
+    blk: int = 0
+    blka: int = 0
+    pf: int = 0
+    pfd: int = 0
+    pts: int = 0
+    plusMinus: Optional[float] = None
+    nbaFantasyPts: Optional[float] = None
+    dd2: int = 0
+    td3: int = 0
+    wnbaFantasyPts: Optional[float] = None
+    availableFlag: int = 0
+    minSec: str = ""
+    teamCount: int = 0
+    dataHash: Optional[str] = None
+
+    def to_dict(self) -> dict:
+        """Convert model to a sparse dictionary for persistence."""
+        item = {
+            'playerId': self.playerId,
+            'playerName': self.playerName,
+            'nickname': self.nickname,
+            'teamId': self.teamId,
+            'teamAbbreviation': self.teamAbbreviation,
+            'teamName': self.teamName,
+            'gameId': self.gameId,
+            'gameDateGameId': f'{self.gameDate}#{self.gameId}',
+            'gameDate': self.gameDate,
+            'matchup': self.matchup,
+            'winLoss': self.winLoss,
+            'minutes': self.minutes,
+            'seasonYear': self.seasonYear,
+            'fgm': self.fgm,
+            'fga': self.fga,
+            'fg3m': self.fg3m,
+            'fg3a': self.fg3a,
+            'ftm': self.ftm,
+            'fta': self.fta,
+            'oreb': self.oreb,
+            'dreb': self.dreb,
+            'reb': self.reb,
+            'ast': self.ast,
+            'tov': self.tov,
+            'stl': self.stl,
+            'blk': self.blk,
+            'blka': self.blka,
+            'pf': self.pf,
+            'pfd': self.pfd,
+            'pts': self.pts,
+            'dd2': self.dd2,
+            'td3': self.td3,
+            'availableFlag': self.availableFlag,
+            'minSec': self.minSec,
+            'teamCount': self.teamCount,
+        }
+        if self.minutesDecimal is not None:
+            item['minutesDecimal'] = self.minutesDecimal
+        if self.fgPct is not None:
+            item['fgPct'] = self.fgPct
+        if self.fg3Pct is not None:
+            item['fg3Pct'] = self.fg3Pct
+        if self.ftPct is not None:
+            item['ftPct'] = self.ftPct
+        if self.plusMinus is not None:
+            item['plusMinus'] = self.plusMinus
+        if self.nbaFantasyPts is not None:
+            item['nbaFantasyPts'] = self.nbaFantasyPts
+        if self.wnbaFantasyPts is not None:
+            item['wnbaFantasyPts'] = self.wnbaFantasyPts
+        if self.dataHash:
+            item['dataHash'] = self.dataHash
+        return item
+
+    @classmethod
+    def from_raw(cls, raw: dict) -> 'NbaPlayerGameLog':
+        """Map a raw PlayerGameLogs row to an NbaPlayerGameLog instance."""
+        game_date_raw = str(raw['GAME_DATE']).strip()
+        game_date = game_date_raw.split('T', 1)[0] if 'T' in game_date_raw else game_date_raw
+        return cls(
+            playerId=int(raw['PLAYER_ID']),
+            playerName=str(raw.get('PLAYER_NAME', '')).strip(),
+            nickname=str(raw.get('NICKNAME', '')).strip(),
+            teamId=int(raw['TEAM_ID']),
+            teamAbbreviation=str(raw.get('TEAM_ABBREVIATION', '')).strip(),
+            teamName=str(raw.get('TEAM_NAME', '')).strip(),
+            gameId=str(raw['GAME_ID']).strip(),
+            gameDate=game_date,
+            matchup=str(raw.get('MATCHUP', '')).strip(),
+            winLoss=str(raw.get('WL', '')).strip(),
+            minutes=str(raw.get('MIN', '')).strip(),
+            minutesDecimal=_to_optional_float(raw.get('MIN')),
+            seasonYear=str(raw.get('SEASON_YEAR', '')).strip(),
+            fgm=int(raw.get('FGM') or 0),
+            fga=int(raw.get('FGA') or 0),
+            fgPct=_to_optional_float(raw.get('FG_PCT')),
+            fg3m=int(raw.get('FG3M') or 0),
+            fg3a=int(raw.get('FG3A') or 0),
+            fg3Pct=_to_optional_float(raw.get('FG3_PCT')),
+            ftm=int(raw.get('FTM') or 0),
+            fta=int(raw.get('FTA') or 0),
+            ftPct=_to_optional_float(raw.get('FT_PCT')),
+            oreb=int(raw.get('OREB') or 0),
+            dreb=int(raw.get('DREB') or 0),
+            reb=int(raw.get('REB') or 0),
+            ast=int(raw.get('AST') or 0),
+            tov=int(raw.get('TOV') or 0),
+            stl=int(raw.get('STL') or 0),
+            blk=int(raw.get('BLK') or 0),
+            blka=int(raw.get('BLKA') or 0),
+            pf=int(raw.get('PF') or 0),
+            pfd=int(raw.get('PFD') or 0),
+            pts=int(raw.get('PTS') or 0),
+            plusMinus=_to_optional_float(raw.get('PLUS_MINUS')),
+            nbaFantasyPts=_to_optional_float(raw.get('NBA_FANTASY_PTS')),
+            dd2=int(raw.get('DD2') or 0),
+            td3=int(raw.get('TD3') or 0),
+            wnbaFantasyPts=_to_optional_float(raw.get('WNBA_FANTASY_PTS')),
+            availableFlag=int(raw.get('AVAILABLE_FLAG') or 0),
+            minSec=str(raw.get('MIN_SEC', '')).strip(),
+            teamCount=int(raw.get('TEAM_COUNT') or 0),
         )
 
 

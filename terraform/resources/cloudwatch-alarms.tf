@@ -81,6 +81,30 @@ resource "aws_cloudwatch_metric_alarm" "players_index_lambda_errors" {
   tags = merge(var.tags, { Environment = var.environment })
 }
 
+# CloudWatch Alarm - Players Stats Lambda Errors (live only)
+resource "aws_cloudwatch_metric_alarm" "players_stats_lambda_errors" {
+  count               = var.environment == "live" ? 1 : 0
+  alarm_name          = "${var.players_stats_function_name}-${var.environment}-errors"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "Errors"
+  namespace           = "AWS/Lambda"
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 0
+  alarm_description   = "Triggers when the players_stats Lambda has sustained errors"
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    FunctionName = aws_lambda_function.players_stats_function.function_name
+  }
+
+  alarm_actions = [aws_sns_topic.lambda_alarms[0].arn]
+  ok_actions    = [aws_sns_topic.lambda_alarms[0].arn]
+
+  tags = merge(var.tags, { Environment = var.environment })
+}
+
 # CloudWatch Alarm - Players Injuries Lambda Errors (live only)
 resource "aws_cloudwatch_metric_alarm" "players_injuries_lambda_errors" {
   count               = var.environment == "live" ? 1 : 0

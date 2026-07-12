@@ -50,6 +50,32 @@ resource "aws_lambda_permission" "allow_events_invoke_players_index" {
   source_arn    = aws_cloudwatch_event_rule.players_index_weekly.arn
 }
 
+# Daily scheduler for players_stats Lambda at 13:00 UTC.
+# Disabled by default and enabled only when explicitly requested.
+
+resource "aws_cloudwatch_event_rule" "players_stats_daily" {
+  name                = "${var.players_stats_function_name}-${var.environment}-daily"
+  description         = "Daily trigger for players_stats data consumption"
+  schedule_expression = "cron(0 13 * * ? *)"
+  state               = var.players_stats_scheduler_enabled ? "ENABLED" : "DISABLED"
+
+  tags = merge(var.tags, { Environment = var.environment })
+}
+
+resource "aws_cloudwatch_event_target" "players_stats_daily_lambda" {
+  rule      = aws_cloudwatch_event_rule.players_stats_daily.name
+  target_id = "${var.players_stats_function_name}-lambda"
+  arn       = aws_lambda_function.players_stats_function.arn
+}
+
+resource "aws_lambda_permission" "allow_events_invoke_players_stats" {
+  statement_id  = "AllowExecutionFromCloudWatchEvents"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.players_stats_function.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.players_stats_daily.arn
+}
+
 # Daily scheduler for players_injuries Lambda at 13:00 UTC.
 # Disabled by default and enabled only when explicitly requested.
 
@@ -75,4 +101,3 @@ resource "aws_lambda_permission" "allow_events_invoke_players_injuries" {
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.players_injuries_daily.arn
 }
-

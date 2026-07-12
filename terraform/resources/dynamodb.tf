@@ -105,6 +105,51 @@ resource "aws_dynamodb_table" "players_index" {
   )
 }
 
+# DynamoDB table for players-stats data
+# Created per environment: bball-app-data-consumption-players-stats-nonlive / bball-app-data-consumption-players-stats-live
+
+resource "aws_dynamodb_table" "players_stats" {
+  name         = "${var.players_stats_function_name}-${var.environment}"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "playerId"
+  range_key    = "gameDateGameId"
+ 
+  attribute {
+    name = "playerId"
+    type = "N"
+  }
+
+  attribute {
+    name = "gameDateGameId"
+    type = "S"
+  }
+
+  attribute {
+    name = "gameId"
+    type = "S"
+  }
+
+  attribute {
+    name = "pts"
+    type = "N"
+  }
+
+  global_secondary_index {
+    name            = "byGameIdPts"
+    hash_key        = "gameId"
+    range_key       = "pts"
+    projection_type = "ALL"
+  }
+
+  tags = merge(
+    var.tags,
+    {
+      Name        = "${var.players_stats_function_name}-${var.environment}"
+      Environment = var.environment
+    }
+  )
+}
+
 # DynamoDB table for players_injuries data
 # Created per environment: bball-app-data-consumption-players-injuries-nonlive / bball-app-data-consumption-players-injuries-live
 # Composite key (playerId, injuryKey) keeps a history of daily reports per player.
