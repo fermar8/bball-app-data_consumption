@@ -196,3 +196,37 @@ class TestPlayersGameStatsHandlerUnit:
         assert response['statusCode'] == 500
         body = json.loads(response['body'])
         assert body['error'] == 'Internal server error'
+
+    def test_handle_accepts_full_rank_headers_and_numeric_min(self, handler, mock_service):
+        headers = [
+            'SEASON_YEAR', 'PLAYER_ID', 'PLAYER_NAME', 'NICKNAME', 'TEAM_ID',
+            'TEAM_ABBREVIATION', 'TEAM_NAME', 'GAME_ID', 'GAME_DATE', 'MATCHUP', 'WL',
+            'MIN', 'FGM', 'FGA', 'FG_PCT', 'FG3M', 'FG3A', 'FG3_PCT', 'FTM', 'FTA',
+            'FT_PCT', 'OREB', 'DREB', 'REB', 'AST', 'TOV', 'STL', 'BLK', 'BLKA', 'PF',
+            'PFD', 'PTS', 'PLUS_MINUS', 'NBA_FANTASY_PTS', 'DD2', 'TD3',
+            'WNBA_FANTASY_PTS', 'GP_RANK', 'W_RANK', 'L_RANK', 'W_PCT_RANK', 'MIN_RANK',
+            'FGM_RANK', 'FGA_RANK', 'FG_PCT_RANK', 'FG3M_RANK', 'FG3A_RANK',
+            'FG3_PCT_RANK', 'FTM_RANK', 'FTA_RANK', 'FT_PCT_RANK', 'OREB_RANK',
+            'DREB_RANK', 'REB_RANK', 'AST_RANK', 'TOV_RANK', 'STL_RANK', 'BLK_RANK',
+            'BLKA_RANK', 'PF_RANK', 'PFD_RANK', 'PTS_RANK', 'PLUS_MINUS_RANK',
+            'NBA_FANTASY_PTS_RANK', 'DD2_RANK', 'TD3_RANK', 'WNBA_FANTASY_PTS_RANK',
+            'AVAILABLE_FLAG', 'MIN_SEC', 'TEAM_COUNT'
+        ]
+        row = [
+            '2025-26', 1630552, 'Jalen Johnson', 'Jalen', 1610612737, 'ATL',
+            'Atlanta Hawks', '0022500917', '2026-03-07T00:00:00', 'ATL vs. PHI', 'W',
+            38.666666666666664, 12, 19, 0.632, 2, 4, 0.5, 9, 9, 1.0, 2, 8, 10, 7, 5, 2,
+            0, 1, 2, 6, 35, 12, 58.5, 1, 0, 58.0, 1, 1, 1, 1, 5, 1, 4, 20, 21, 38, 15,
+            7, 8, 1, 17, 5, 11, 5, 3, 8, 41, 86, 56, 7, 1, 16, 2, 1, 1, 1, 1, '38:40',
+            1
+        ]
+
+        document = mock_service.fetch_latest_player_game_logs_document.return_value
+        document['payload']['resultSets'][0]['headers'] = headers
+        document['payload']['resultSets'][0]['rowSet'] = [row]
+
+        response = handler.handle()
+
+        assert response['statusCode'] == 200
+        body = json.loads(response['body'])
+        assert body['written_player_game_logs'] == 1

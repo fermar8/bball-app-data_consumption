@@ -242,38 +242,10 @@
                     { "type": "string" },
                     { "type": "string" },
                     { "type": "string" },
-                    { "type": ["number", "string"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["number", "null"] },
-                    { "type": ["number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": ["number", "null"] },
-                    { "type": ["integer", "number", "null"] },
-                    { "type": "string" },
-                    { "type": ["integer", "number", "null"] }
+                    { "type": ["number", "string"] }
                   ],
                   "additionalItems": {
-                    "type": ["integer", "number", "null"]
+                    "type": ["integer", "number", "string", "null"]
                   }
                 }
               }
