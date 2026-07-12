@@ -107,3 +107,28 @@ output "players_stats_scheduler_rule_name" {
   description = "Name of the players_stats scheduler rule"
   value       = aws_cloudwatch_event_rule.players_stats_daily.name
 }
+
+output "players_injuries_lambda_function_name" {
+  description = "Name of the players_injuries Lambda function"
+  value       = aws_lambda_function.players_injuries_function.function_name
+}
+
+output "players_injuries_lambda_function_arn" {
+  description = "ARN of the players_injuries Lambda function"
+  value       = aws_lambda_function.players_injuries_function.arn
+}
+
+output "players_injuries_dynamodb_table_name" {
+  description = "Name of the players_injuries DynamoDB table"
+  value       = aws_dynamodb_table.players_injuries.name
+}
+
+output "players_injuries_dynamodb_table_arn" {
+  description = "ARN of the players_injuries DynamoDB table"
+  value       = aws_dynamodb_table.players_injuries.arn
+}
+
+output "players_injuries_scheduler_rule_name" {
+  description = "Name of the players_injuries scheduler rule"
+  value       = aws_cloudwatch_event_rule.players_injuries_daily.name
+}

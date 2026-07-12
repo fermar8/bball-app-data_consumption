@@ -378,3 +378,92 @@ class NbaPlayerGameLog:
             minSec=str(raw.get('MIN_SEC', '')).strip(),
             teamCount=int(raw.get('TEAM_COUNT') or 0),
         )
+
+
+@dataclass
+class NbaPlayerInjury:
+    """NBA player injury model matching the players_injuries DynamoDB table.
+
+    Field set follows the contract documented in
+    bball-app-nba_api_client/docs/DATABASE_SCHEMA.md (Table 6: nba_injuries).
+    Uses a composite key (playerId hash + injuryKey range) to keep a daily
+    history of reports without collisions. `injuryKey` is `reportDate#fetchedAt`.
+    """
+
+    playerId: int = 0
+    injuryKey: str = ""
+    playerName: str = ""
+    teamAbbr: str = ""
+    status: str = ""
+    availability: str = ""
+    reasonType: str = ""
+    reason: str = ""
+    reportDate: str = ""
+    fetchedAt: str = ""
+    updatedAt: Optional[str] = None
+    dataHash: Optional[str] = None
+
+    def to_dict(self) -> dict:
+        item = {
+            'playerId': self.playerId,
+            'injuryKey': self.injuryKey,
+            'playerName': self.playerName,
+            'teamAbbr': self.teamAbbr,
+            'status': self.status,
+            'availability': self.availability,
+            'reasonType': self.reasonType,
+            'reason': self.reason,
+            'reportDate': self.reportDate,
+            'fetchedAt': self.fetchedAt,
+        }
+        if self.updatedAt:
+            item['updatedAt'] = self.updatedAt
+        if self.dataHash:
+            item['dataHash'] = self.dataHash
+        return item
+
+    @staticmethod
+    def _normalize_report_date(report_date) -> str:
+        """Convert MM/DD/YYYY (US source) to ISO YYYY-MM-DD; pass through ISO."""
+        if not report_date:
+            return ""
+        text = str(report_date).strip()
+        if '/' in text:
+            parts = text.split('/')
+            if len(parts) == 3:
+                month, day, year = parts
+                return f"{int(year):04d}-{int(month):02d}-{int(day):02d}"
+        return text
+
+    @classmethod
+    def from_raw(cls, raw: dict, fetched_at: str, updated_at: Optional[str] = None) -> 'NbaPlayerInjury':
+        """Map a raw injury entry from the injury_report payload.
+
+        Args:
+            raw: One element of payload.injuries[].
+            fetched_at: Envelope `fetched_at_utc` (ISO string).
+            updated_at: Optional `payload.updated_at` (ISO string).
+
+        Returns:
+            NbaPlayerInjury instance.
+
+        Raises:
+            ValueError: If `player_id` is missing or not coercible to int.
+        """
+        player_id_raw = raw.get('player_id')
+        if player_id_raw is None:
+            raise ValueError('player_id is required')
+        report_date_iso = cls._normalize_report_date(raw.get('report_date'))
+        return cls(
+            playerId=int(player_id_raw),
+            injuryKey=f"{report_date_iso}#{fetched_at}",
+            playerName=str(raw.get('player_name') or '').strip(),
+            teamAbbr=str(raw.get('team_abbr') or '').strip(),
+            status=str(raw.get('status') or '').strip(),
+            availability=str(raw.get('availability') or '').strip(),
+            reasonType=str(raw.get('reason_type') or '').strip(),
+            reason=str(raw.get('reason') or '').strip(),
+            reportDate=report_date_iso,
+            fetchedAt=fetched_at,
+            updatedAt=updated_at,
+        )
