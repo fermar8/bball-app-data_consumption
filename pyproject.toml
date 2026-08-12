@@ -9,7 +9,7 @@ description = "Basketball app data consumption Lambda - teams-static"
 requires-python = ">=3.12"
 dependencies = [
     "boto3==1.34.162",
-    "jsonschema==4.21.1",
+    "jsonschema==4.26.0",
 ]
 
 [project.optional-dependencies]
