@@ -150,6 +150,44 @@ class TestPlayersGameStatsService:
         assert result['written_player_game_logs'] == 2
         mock_repository.upsert_changed_batch.assert_called_once()
 
+    def test_consume_player_game_logs_from_document_with_date_range(self, service, mock_repository):
+        replay_document = {
+            'payload': {
+                'resultSets': [
+                    {
+                        'name': 'PlayerGameLogs',
+                        'headers': [
+                            'PLAYER_ID',
+                            'PLAYER_NAME',
+                            'NICKNAME',
+                            'TEAM_ID',
+                            'TEAM_ABBREVIATION',
+                            'TEAM_NAME',
+                            'GAME_ID',
+                            'GAME_DATE',
+                        ],
+                        'rowSet': [
+                            ['1', 'Player One', 'P', 1610612737, 'ATL', 'Atlanta Hawks', '0022500001', '2026-03-05T00:00:00'],
+                            ['2', 'Player Two', 'P', 1610612737, 'ATL', 'Atlanta Hawks', '0022500002', '2026-03-07T00:00:00'],
+                            ['3', 'Player Three', 'P', 1610612737, 'ATL', 'Atlanta Hawks', '0022500003', '2026-03-10T00:00:00'],
+                        ],
+                    }
+                ]
+            }
+        }
+
+        service.consume_player_game_logs_from_document(
+            replay_document,
+            input_options={
+                'from_date_utc': '2026-03-06T00:00:00Z',
+                'to_date_utc': '2026-03-08T23:59:59Z',
+            },
+        )
+
+        call_args = mock_repository.upsert_changed_batch.call_args[0][0]
+        assert len(call_args) == 1
+        assert call_args[0].playerId == 2
+
     def test_consume_player_game_logs_calls_repository(self, service, mock_repository):
         service.consume_player_game_logs_from_document(RAW_DOCUMENT)
 

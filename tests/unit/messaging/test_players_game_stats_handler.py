@@ -165,7 +165,36 @@ class TestPlayersGameStatsHandlerUnit:
         mock_service.fetch_latest_player_game_logs_document.assert_called_once()
         mock_service.consume_player_game_logs_from_document.assert_called_once_with(
             mock_service.fetch_latest_player_game_logs_document.return_value,
+            input_options={},
         )
+
+    def test_handle_forwards_runtime_input_options(self, handler, mock_service):
+        event = {
+            'input': {
+                'from_date_utc': '2026-03-01T00:00:00Z',
+                'to_date_utc': '2026-03-10T23:59:59Z',
+                'refresh_days': 14,
+            }
+        }
+
+        response = handler.handle(event=event)
+
+        assert response['statusCode'] == 200
+        mock_service.consume_player_game_logs_from_document.assert_called_once_with(
+            mock_service.fetch_latest_player_game_logs_document.return_value,
+            input_options={
+                'from_date_utc': '2026-03-01T00:00:00Z',
+                'to_date_utc': '2026-03-10T23:59:59Z',
+                'refresh_days': 14,
+            },
+        )
+
+    def test_handle_rejects_unknown_manual_input_keys(self, handler):
+        response = handler.handle(event={'input': {'unexpected_option': True}})
+
+        assert response['statusCode'] == 422
+        body = json.loads(response['body'])
+        assert 'Unknown input option' in body['error']
 
     def test_handle_invalid_raw_schema_returns_400(self, handler, mock_service):
         mock_service.fetch_latest_player_game_logs_document.return_value = {
