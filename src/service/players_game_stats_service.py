@@ -207,10 +207,6 @@ class PlayersGameStatsService:
         if not isinstance(write_all_season_games, bool):
             raise ValueError("write_all_season_games must be a boolean")
 
-        include_final_games = options.get('include_final_games')
-        if include_final_games is not None and not isinstance(include_final_games, bool):
-            raise ValueError("include_final_games must be a boolean")
-
         from_date_utc = options.get('from_date_utc')
         if from_date_utc is not None and not isinstance(from_date_utc, str):
             raise ValueError("from_date_utc must be an ISO datetime string")

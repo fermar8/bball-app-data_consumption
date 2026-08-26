@@ -43,7 +43,6 @@ class PlayersGameStatsHandler:
                 'from_date_utc',
                 'to_date_utc',
                 'replay_until_default_horizon',
-                'include_final_games',
                 'refresh_days',
             }
 
