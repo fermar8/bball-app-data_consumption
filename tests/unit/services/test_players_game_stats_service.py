@@ -1,6 +1,7 @@
 """
 Unit tests for the player game stats service layer with mocked dependencies.
 """
+from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -10,6 +11,7 @@ from src.service.players_game_stats_service import (
     PlayersGameStatsService,
     extract_player_game_logs_from_payload,
     map_player_game_logs,
+    select_candidate_player_game_logs,
 )
 
 
@@ -200,3 +202,87 @@ class TestPlayersGameStatsService:
     def test_consume_player_game_logs_raises_on_missing_bucket(self, mock_bucket, service):
         with pytest.raises(ValueError, match='S3_BUCKET_NAME not set'):
             service.consume_player_game_logs()
+
+
+def _log(player_id: int, game_date: str) -> NbaPlayerGameLog:
+    return NbaPlayerGameLog(playerId=player_id, gameDate=game_date)
+
+
+class TestSelectCandidatePlayerGameLogs:
+    LOGS = [
+        _log(1, '2026-03-05'),
+        _log(2, '2026-03-07'),
+        _log(3, '2026-03-10'),
+    ]
+
+    def test_returns_everything_without_options(self):
+        assert len(select_candidate_player_game_logs(self.LOGS)) == 3
+
+    def test_write_all_season_games_returns_everything(self):
+        selected = select_candidate_player_game_logs(self.LOGS, write_all_season_games=True)
+        assert len(selected) == 3
+
+    def test_from_date_is_inclusive_lower_bound(self):
+        selected = select_candidate_player_game_logs(self.LOGS, from_date_utc='2026-03-07T00:00:00Z')
+        assert [log.playerId for log in selected] == [2, 3]
+
+    def test_to_date_is_inclusive_upper_bound(self):
+        selected = select_candidate_player_game_logs(
+            self.LOGS,
+            from_date_utc='2026-03-05T00:00:00Z',
+            to_date_utc='2026-03-07T00:00:00Z',
+        )
+        assert [log.playerId for log in selected] == [1, 2]
+
+    def test_replay_until_default_horizon_caps_upper_bound(self):
+        selected = select_candidate_player_game_logs(
+            self.LOGS,
+            now_utc=datetime(2026, 3, 4, 18, 0, tzinfo=timezone.utc),
+            refresh_days=3,
+            from_date_utc='2026-03-01T00:00:00Z',
+            replay_until_default_horizon=True,
+        )
+        assert [log.playerId for log in selected] == [1, 2]
+
+    def test_skips_logs_with_unparseable_game_date(self):
+        selected = select_candidate_player_game_logs(
+            [_log(1, ''), _log(2, '2026-03-07')],
+            from_date_utc='2026-03-01T00:00:00Z',
+        )
+        assert [log.playerId for log in selected] == [2]
+
+
+class TestManualInputValidation:
+    @pytest.fixture
+    def service(self):
+        return PlayersGameStatsService(repository=MagicMock())
+
+    @pytest.mark.parametrize('options, expected_error', [
+        ({'to_date_utc': '2026-03-10T00:00:00Z'}, 'to_date_utc requires from_date_utc'),
+        (
+            {
+                'from_date_utc': '2026-03-01T00:00:00Z',
+                'to_date_utc': '2026-03-10T00:00:00Z',
+                'replay_until_default_horizon': True,
+            },
+            'mutually exclusive',
+        ),
+        (
+            {'write_all_season_games': True, 'from_date_utc': '2026-03-01T00:00:00Z'},
+            'cannot be combined with replay range options',
+        ),
+        (
+            {'from_date_utc': '2026-03-10T00:00:00Z', 'to_date_utc': '2026-03-01T00:00:00Z'},
+            'greater than or equal to',
+        ),
+        (
+            {'replay_until_default_horizon': True},
+            'replay_until_default_horizon requires from_date_utc',
+        ),
+        ({'refresh_days': 0}, 'refresh_days must be >= 1'),
+        ({'write_all_season_games': 'yes'}, 'write_all_season_games must be a boolean'),
+        ({'from_date_utc': 20260301}, 'from_date_utc must be an ISO datetime string'),
+    ])
+    def test_rejects_invalid_option_combinations(self, service, options, expected_error):
+        with pytest.raises(ValueError, match=expected_error):
+            service.consume_player_game_logs_from_document(RAW_DOCUMENT, input_options=options)
