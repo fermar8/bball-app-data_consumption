@@ -25,15 +25,40 @@ class PlayersGameStatsHandler:
     def __init__(self, service: PlayersGameStatsService = None):
         self.service = service
 
-    def handle(self) -> Dict[str, Any]:
+    def handle(self, event: Dict[str, Any] = None) -> Dict[str, Any]:
         try:
             if self.service is None:
                 repository = PlayersGameStatsRepository()
                 self.service = PlayersGameStatsService(repository)
 
+            runtime_input: Dict[str, Any] = {}
+            if isinstance(event, dict):
+                if isinstance(event.get('input'), dict):
+                    runtime_input = event['input']
+                else:
+                    runtime_input = event
+
+            allowed_keys = {
+                'write_all_season_games',
+                'from_date_utc',
+                'to_date_utc',
+                'replay_until_default_horizon',
+                'refresh_days',
+            }
+
+            if isinstance(event, dict) and isinstance(event.get('input'), dict):
+                unknown_keys = sorted([k for k in runtime_input.keys() if k not in allowed_keys])
+                if unknown_keys:
+                    raise ValueError(f"Unknown input option(s): {', '.join(unknown_keys)}")
+
+            input_options = {k: v for k, v in runtime_input.items() if k in allowed_keys}
+
             raw_document = self.service.fetch_latest_player_game_logs_document()
             validate(instance=raw_document, schema=RAW_PLAYER_GAME_LOGS_SCHEMA)
-            result = self.service.consume_player_game_logs_from_document(raw_document)
+            result = self.service.consume_player_game_logs_from_document(
+                raw_document,
+                input_options=input_options,
+            )
             logger.info("consume_player_game_logs completed. written_rows=%d", result['written_player_game_logs'])
             return {
                 'statusCode': 200,
@@ -74,7 +99,7 @@ def lambda_handler(event, context):
         DynamoDBConnection.initialize()
 
         handler = PlayersGameStatsHandler()
-        response = handler.handle()
+        response = handler.handle(event=event)
 
         logger.info("Response status: %s", response.get('statusCode'))
         return response

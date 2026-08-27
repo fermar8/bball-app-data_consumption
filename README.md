@@ -209,6 +209,83 @@ Future denormalization:
 Disabled by default in Terraform (`players_index_scheduler_enabled=false`).
 Weekly cadence is used because roster metadata changes less frequently than game schedules.
 
+### players_stats
+
+|                    | Nonlive                                            | Live                                            |
+| ------------------ | -------------------------------------------------- | ----------------------------------------------- |
+| **Lambda**         | `bball-app-data-consumption-players-stats-nonlive` | `bball-app-data-consumption-players-stats-live` |
+| **DynamoDB table** | `bball-app-data-consumption-players-stats-nonlive` | `bball-app-data-consumption-players-stats-live` |
+
+**Handler:** `src.messaging.players_game_stats_handler.lambda_handler`
+
+**Default scheduler behavior (no custom input):**
+
+1. Fetch latest raw document from `s3://{bucket}/raw/player_game_logs/`
+2. Validate against `player-game-logs-raw-schema.json`
+3. Extract the `PlayerGameLogs` result set from `payload.resultSets`
+4. Map rows to `NbaPlayerGameLog`
+5. Process every mapped row (the raw document already covers the producer's fetch window)
+6. Upsert only changed items (hash-based write skip)
+
+**Scheduler:** `cron(0 13 * * ? *)` (daily 13:00 UTC)
+
+#### Manual Input Options (for ad-hoc invocation)
+
+Provide options under `event.input` when invoking manually. Mirrors the `games` lambda, minus `include_final_games`: a game log only exists once the game has been played, so there is no non-final state to filter.
+
+| Option                         | Type    | Default                                   | Description                                                             |
+| ------------------------------ | ------- | ----------------------------------------- | ----------------------------------------------------------------------- |
+| `write_all_season_games`       | boolean | `false`                                   | When `true`, process all mapped rows explicitly (backfill mode).        |
+| `from_date_utc`                | string  | `null`                                    | ISO datetime lower bound (inclusive) on `GAME_DATE` for replay mode.    |
+| `to_date_utc`                  | string  | `null`                                    | ISO datetime upper bound (inclusive). Requires `from_date_utc`.         |
+| `replay_until_default_horizon` | boolean | `false`                                   | Cap replay upper bound at today + `refresh_days`. Requires `from_date_utc`. |
+| `refresh_days`                 | integer | env (`GAMES_REFRESH_DAYS`, fallback `14`) | Horizon days used by replay-until-default-horizon mode.                 |
+
+#### Validation Rules
+
+1. Unknown keys inside `event.input` are rejected.
+2. `write_all_season_games` cannot be combined with replay range options.
+3. `to_date_utc` requires `from_date_utc`.
+4. `to_date_utc` and `replay_until_default_horizon` are mutually exclusive.
+5. `to_date_utc` must be greater than or equal to `from_date_utc`.
+6. `replay_until_default_horizon` requires `from_date_utc`.
+7. `refresh_days` must be an integer >= 1.
+
+#### Examples
+
+Replay a closed date range:
+
+```json
+{
+  "input": {
+    "from_date_utc": "2026-03-01T00:00:00Z",
+    "to_date_utc": "2026-03-10T23:59:59Z"
+  }
+}
+```
+
+Replay from a date until the default horizon:
+
+```json
+{
+  "input": {
+    "from_date_utc": "2026-03-01T00:00:00Z",
+    "replay_until_default_horizon": true,
+    "refresh_days": 14
+  }
+}
+```
+
+Process every mapped row:
+
+```json
+{
+  "input": {
+    "write_all_season_games": true
+  }
+}
+```
+
 ## Monitoring (live only)
 
 - **CloudWatch Alarm** on Lambda `Errors` metric — triggers if errors > 0 over two consecutive 5-minute periods
